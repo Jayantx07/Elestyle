@@ -1,0 +1,119 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import "tailwindcss";
+
+/* ============================================================
+   GLOBAL DESIGN TOKENS — all components reference these vars.
+   NEVER hardcode hex values inside components.
+   ============================================================ */
+:root {
+  /* Default / Global theme (homepage, header, footer, FAQ) */
+  --bg-page:         #F7F1E3;
+  --surface-card:    #FFFFFF;
+  --text-primary:    #1B2A2E;
+  --text-secondary:  #4A5A62;
+  --accent:          #0F4C4C;
+  --accent-hover:    #0C3D3D;
+  --accent-gold:     #C9A05C;
+  --accent-gold-hover: #B78A45;
+  --accent-secondary: #C9A05C;
+  --border:          #E5DCC8;
+}
+
+/* ============================================================
+   CATEGORY THEME OVERRIDES — set via data-category on <html>.
+   Only these tokens change; everything else inherits :root.
+   ============================================================ */
+html[data-category="macrame"] {
+  --bg-page:          #FBF3EC;
+  --accent:           #C1694F;
+  --accent-hover:     #A85640;
+  --accent-secondary: #E8C9A0;
+}
+
+html[data-category="candles"] {
+  --bg-page:          #FDF6E8;
+  --accent:           #BA7517;
+  --accent-hover:     #9C6110;
+  --accent-secondary: #FAEEDA;
+}
+
+html[data-category="earrings"] {
+  --bg-page:          #F8F1F0;
+  --accent:           #72243E;
+  --accent-hover:     #5C1D32;
+  --accent-secondary: #D4AF7A;
+}
+
+html[data-category="rajasthani"] {
+  --bg-page:          #FDF2E9;
+  --accent:           #D4537E;
+  --accent-hover:     #B93E67;
+  --accent-secondary: #EF9F27;
+}
+
+html[data-category="wedding"] {
+  --bg-page:          #FBF0EC;
+  --accent:           #791F1F;
+  --accent-hover:     #611818;
+  --accent-secondary: #C9A05C;
+}
+
+/* ============================================================
+   TAILWIND v4 THEME — Tailwind aliases referencing our vars
+   ============================================================ */
+@theme {
+  /* Legacy color aliases kept so existing Tailwind classes still work */
+  --color-cream:      var(--bg-page);
+  --color-charcoal:   var(--text-primary);
+  --color-muted-grey: var(--text-secondary);
+  --color-accent-teal: var(--accent);
+  --color-accent-gold: var(--accent-gold);
+  --color-beige:      var(--border);
+  --color-surface:    var(--surface-card);
+
+  /* Fonts */
+  --font-fraunces: "Fraunces", serif;
+  --font-serif:    "Fraunces", serif;
+  --font-sans:     "Inter", sans-serif;
+
+  --spacing-section: 160px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    font-family: "Inter", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Global focus-visible style — 2px solid var(--accent) */
+  *:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* Headings use Fraunces */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Fraunces", serif;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  /* Scrollbar hide utility */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
