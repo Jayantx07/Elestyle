@@ -185,6 +185,7 @@ const CATEGORY_META: Record<string, { label: string; heading: string; accent: st
   'bags':            { label: 'BAGS',            heading: 'Recommended', accent: 'Bags' },
   'jewelry':         { label: 'JEWELRY',         heading: 'Recommended', accent: 'Jewelry' },
   'homemade-soaps':  { label: 'HOMEMADE SOAPS',  heading: 'Recommended', accent: 'Homemade Soaps' },
+  'wedding-giveaways': { label: 'WEDDING GIVEAWAYS', heading: 'Recommended', accent: 'Wedding Giveaways' },
 };
 
 export const ProductGridSection: React.FC = () => {

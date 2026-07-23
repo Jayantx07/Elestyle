@@ -30,7 +30,7 @@ html[data-category="macrame"] {
   --accent-secondary: #E8C9A0;
 }
 
-html[data-category="candles"] {
+html[data-category="soaps"] {
   --bg-page:          #FDF6E8;
   --accent:           #BA7517;
   --accent-hover:     #9C6110;
@@ -105,6 +105,16 @@ html[data-category="wedding"] {
     font-family: "Fraunces", serif;
     font-weight: 500;
     color: var(--text-primary);
+  }
+
+  /* Smoothness utilities */
+  img, video {
+    transition: transform 0.7s cubic-bezier(0.25,1,0.5,1), opacity 0.35s ease;
+    will-change: transform;
+  }
+
+  a, button {
+    transition: color 0.18s ease, opacity 0.18s ease, transform 0.18s ease;
   }
 
   /* Scrollbar hide utility */

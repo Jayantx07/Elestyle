@@ -19,7 +19,7 @@ export const TestimonialSection: React.FC = () => {
     },
     {
       id: '3',
-      badge: 'HANDMADE CANDLES',
+      badge: 'HANDMADE SOAPS',
       hasVideo: false,
       imageSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527414/handmade_candles_cover_chs6qs.jpg',
     },

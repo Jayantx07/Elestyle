@@ -8,13 +8,18 @@ export interface FilterTab {
 export interface CategoryFilterBarProps {
   tabs: FilterTab[];
   className?: string;
+  activeId?: string;
+  onChange?: (id: string) => void;
 }
 
 export const CategoryFilterBar: React.FC<CategoryFilterBarProps> = ({
   tabs,
   className = '',
+  activeId,
+  onChange,
 }) => {
-  const [activeId, setActiveId] = useState(tabs[0]?.id ?? 'all');
+  const [internalActiveId, setInternalActiveId] = useState(tabs[0]?.id ?? 'all');
+  const currentActiveId = activeId ?? internalActiveId;
 
   return (
     <div
@@ -44,13 +49,16 @@ export const CategoryFilterBar: React.FC<CategoryFilterBarProps> = ({
           aria-label="Filter products"
         >
           {tabs.map((tab) => {
-            const isActive = activeId === tab.id;
+            const isActive = currentActiveId === tab.id;
             return (
               <button
                 key={tab.id}
                 role="tab"
                 aria-selected={isActive}
-                onClick={() => setActiveId(tab.id)}
+                onClick={() => {
+                  if (onChange) onChange(tab.id);
+                  setInternalActiveId(tab.id);
+                }}
                 className={`
                   whitespace-nowrap px-6 py-2 rounded-full
                   text-[13px] font-sans font-medium transition-all duration-300

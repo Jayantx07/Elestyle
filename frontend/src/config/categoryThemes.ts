@@ -7,14 +7,14 @@
 
 export type CategorySlug =
   | 'macrame-bags'
-  | 'handmade-candles'
+  | 'handmade-soaps'
   | 'handmade-earrings'
   | 'rajasthani-vibes'
   | 'wedding-giveaway';
 
 export type CategoryThemeKey =
   | 'macrame'
-  | 'candles'
+  | 'soaps'
   | 'earrings'
   | 'rajasthani'
   | 'wedding';
@@ -144,23 +144,23 @@ const macrameBags: CategoryTheme = {
 };
 
 // ============================================================
-// HANDMADE CANDLES
+// HANDMADE SOAPS
 // ============================================================
-const handmadeCandles: CategoryTheme = {
-  slug: 'handmade-candles',
-  themeKey: 'candles',
-  displayName: 'Handmade Candles',
-  eyebrow: 'HANDMADE CANDLES',
-  heroHeading: 'Light a moment,',
-  heroHeadingItalic: 'hold it still.',
-  heroDescription: 'Small-batch candles poured with natural soy wax and pure essential oils. Every flame tells a story of slow craft.',
+const handmadeSoaps: CategoryTheme = {
+  slug: 'handmade-soaps',
+  themeKey: 'soaps',
+  displayName: 'Handmade Soaps',
+  eyebrow: 'HANDMADE SOAPS',
+  heroHeading: 'Pure, slow-made,',
+  heroHeadingItalic: 'kind to skin.',
+  heroDescription: 'Handmade soaps crafted from natural oils with gentle scents — small-batch and skin-friendly.',
   heroImage: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527414/handmade_candles_cover_chs6qs.jpg',
   filterTabs: [
     { id: 'all', label: 'ALL' },
-    { id: 'soy', label: 'SOY WAX' },
-    { id: 'beeswax', label: 'BEESWAX' },
+    { id: 'all', label: 'ALL' },
+    { id: 'gentle', label: 'GENTLE' },
+    { id: 'organic', label: 'ORGANIC' },
     { id: 'scented', label: 'SCENTED' },
-    { id: 'unscented', label: 'UNSCENTED' },
   ],
   products: [
     {
@@ -484,7 +484,7 @@ const weddingGiveaway: CategoryTheme = {
 // ============================================================
 export const CATEGORY_THEMES: Record<CategorySlug, CategoryTheme> = {
   'macrame-bags': macrameBags,
-  'handmade-candles': handmadeCandles,
+  'handmade-soaps': handmadeSoaps,
   'handmade-earrings': handmadeEarrings,
   'rajasthani-vibes': rajasthaniVibes,
   'wedding-giveaway': weddingGiveaway,

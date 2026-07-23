@@ -7,7 +7,7 @@ export const MarqueeBanner: React.FC = () => {
     'Sustainable',
     'Handmade Earrings',
     'Macrame Bags',
-    'Handmade Candles',
+    'Handmade Soaps',
     'Wedding Giveaways',
   ];
 

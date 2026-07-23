@@ -62,8 +62,14 @@ const CategoryTemplate: React.FC<{ slug: CategorySlug }> = ({ slug }) => {
   );
 
   // ─── 2. Filter Bar ──────────────────────────────────────────────────────────
+  const [activeTab, setActiveTab] = React.useState<string>('all');
+
   const FilterBar = (
-    <CategoryFilterBar tabs={[{ id: 'all', label: 'All' }, ...theme.filterTabs]} />
+    <CategoryFilterBar
+      tabs={[{ id: 'all', label: 'All' }, ...theme.filterTabs]}
+      activeId={activeTab}
+      onChange={(id) => setActiveTab(id)}
+    />
   );
 
   // ─── 3. Product Grid ───────────────────────────────────────────────────────
@@ -71,21 +77,37 @@ const CategoryTemplate: React.FC<{ slug: CategorySlug }> = ({ slug }) => {
     <section className="py-12 md:py-16 px-4 md:px-8" style={{ backgroundColor: 'var(--bg-page)' }}>
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
-          {theme.products.map((product) => (
-            <ListingProductCard
-              key={product.id}
-              id={product.id}
-              imageSrc={product.imageSrc}
-              altText={product.altText}
-              title={product.title}
-              category={theme.displayName}
-              price={product.price}
-              rating={4.8}
-              reviewsCount={Math.floor(Math.random() * 50) + 10}
-              originalPrice={Math.random() > 0.7 ? product.price + 100 : undefined}
-              discountBadge={Math.random() > 0.7 ? '-15%' : undefined}
-            />
-          ))}
+          {(() => {
+            const keyword = activeTab.toLowerCase();
+            const filtered =
+              keyword === 'all'
+                ? theme.products
+                : theme.products.filter((p) => {
+                    return (
+                      p.title.toLowerCase().includes(keyword) ||
+                      p.description.toLowerCase().includes(keyword)
+                    );
+                  });
+
+            // If no results for a given tab, fall back to showing all
+            const toShow = filtered.length > 0 ? filtered : theme.products;
+
+            return toShow.map((product) => (
+              <ListingProductCard
+                key={product.id}
+                id={product.id}
+                imageSrc={product.imageSrc}
+                altText={product.altText}
+                title={product.title}
+                category={theme.displayName}
+                price={product.price}
+                rating={4.8}
+                reviewsCount={Math.floor(Math.random() * 50) + 10}
+                originalPrice={Math.random() > 0.7 ? product.price + 100 : undefined}
+                discountBadge={Math.random() > 0.7 ? '-15%' : undefined}
+              />
+            ));
+          })()}
           {/* Duplicate products to show grid layout filling up if less than 8 */}
           {theme.products.map((product) => (
             <ListingProductCard

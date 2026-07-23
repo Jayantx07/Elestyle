@@ -22,9 +22,9 @@ const BANNERS = [
     imageSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527413/macrame_bags_cover_qvbzf6.jpg',
   },
   {
-    id: 'handmade-candles',
-    title: 'Handmade Candles',
-    subtitle: 'SCENTS & WARMTH',
+    id: 'handmade-soaps',
+    title: 'Handmade Soaps',
+    subtitle: 'PURE SOAPS',
     imageSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527414/handmade_candles_cover_chs6qs.jpg',
   },
   {
@@ -47,7 +47,7 @@ export const HeroBannerCarousel: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative w-full h-[60vh] md:h-[85vh] overflow-hidden bg-[#f8f5f0] group">
+    <div className="relative w-full h-[60vh] md:h-[85vh] overflow-hidden group" style={{ backgroundColor: 'var(--bg-page)' }}>
       {/* Slider Container */}
       <div 
         className="flex w-full h-full transition-transform duration-1000 ease-[cubic-bezier(0.25,1,0.5,1)]"
@@ -56,13 +56,15 @@ export const HeroBannerCarousel: React.FC = () => {
         {BANNERS.map((banner, index) => {
           const isActive = index === currentIndex;
           return (
-            <div key={banner.id} className="relative w-full h-full flex-shrink-0">
-              {/* No colored layer on the image */}
-              <img
-                src={banner.imageSrc}
-                alt={banner.title}
-                className="w-full h-full object-cover object-center"
-              />
+            <div key={banner.id} className="relative w-full h-full flex-shrink-0 px-6 md:px-12 py-6 box-border">
+              {/* Image with breathing room and rounded corners */}
+              <div className="w-full h-full overflow-hidden rounded-[20px] shadow-sm">
+                <img
+                  src={banner.imageSrc}
+                  alt={banner.title}
+                  className="w-full h-full object-cover object-center transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] hover:scale-105"
+                />
+              </div>
               
               {/* Text aligned to bottom-left */}
               <div className="absolute bottom-16 md:bottom-32 left-8 md:left-24 max-w-xl text-left z-20">
@@ -79,11 +81,12 @@ export const HeroBannerCarousel: React.FC = () => {
                   {banner.title}
                 </Typography>
                 <div className={`transition-all duration-1000 delay-700 ${isActive ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-                  <Button 
-                    variant="primary" 
+                  <Button
+                    variant="primary"
+                    shape="rounded"
                     data-cursor="explore"
                     data-cursor-text="EXPLORE"
-                    className="px-8 py-4 rounded-none tracking-[0.15em] text-xs font-semibold uppercase shadow-2xl transition-all duration-300 cursor-none"
+                    className="px-8 py-3 tracking-[0.15em] text-sm font-semibold uppercase shadow-2xl transition-all duration-300"
                   >
                     Explore Collection
                   </Button>
@@ -95,11 +98,11 @@ export const HeroBannerCarousel: React.FC = () => {
       </div>
 
       {/* Navigation Arrows */}
-      <button 
+      <button
         onClick={handlePrev}
         data-cursor="prev"
         data-cursor-text="PREV"
-        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-30 p-3 md:p-4 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full text-white transition-all duration-300 opacity-0 group-hover:opacity-100 shadow-lg cursor-none"
+        className="absolute left-8 md:left-12 top-1/2 -translate-y-1/2 z-30 p-4 md:p-5 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full text-white transition-all duration-300 opacity-0 group-hover:opacity-100 shadow-md"
         aria-label="Previous slide"
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -107,11 +110,11 @@ export const HeroBannerCarousel: React.FC = () => {
         </svg>
       </button>
 
-      <button 
+      <button
         onClick={handleNext}
         data-cursor="next"
         data-cursor-text="NEXT"
-        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-30 p-3 md:p-4 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full text-white transition-all duration-300 opacity-0 group-hover:opacity-100 shadow-lg cursor-none"
+        className="absolute right-8 md:right-12 top-1/2 -translate-y-1/2 z-30 p-4 md:p-5 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full text-white transition-all duration-300 opacity-0 group-hover:opacity-100 shadow-md"
         aria-label="Next slide"
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

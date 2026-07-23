@@ -5,18 +5,18 @@ export const CATEGORIES = [
   { id: '1', slug: 'rajasthani-vibes', label: 'Rajasthani Vibes', imgSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527414/Rajasthani_Vibe_u6p0zm.jpg' },
   { id: '2', slug: 'handmade-earrings', label: 'Handmade Earrings', imgSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527414/handmade_earrings_o0cb8h.jpg' },
   { id: '3', slug: 'macrame-bags', label: 'Macrame Bags', imgSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527415/macrame_bags_waokfv.jpg' },
-  { id: '4', slug: 'handmade-candles', label: 'Handmade Candles', imgSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527414/handmade_candles_rwjvlj.jpg' },
+  { id: '4', slug: 'handmade-soaps', label: 'Handmade Soaps', imgSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527414/handmade_candles_rwjvlj.jpg' },
   { id: '5', slug: 'wedding-giveaway', label: 'Wedding Giveaway', imgSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527414/wedding_giveaways_aabxvh.jpg' },
 ];
 
 export const CircularCategoryCarousel: React.FC = () => {
   return (
     <div
-      className="w-full pt-24 md:pt-[104px] pb-6"
-      style={{ backgroundColor: 'var(--surface-card)', borderBottom: '1px solid var(--border)' }}
+      className="w-full pt-28 md:pt-[128px] pb-6"
+      style={{ backgroundColor: 'var(--bg-page)', borderBottom: '1px solid var(--border)' }}
     >
       <div className="max-w-7xl mx-auto px-4 overflow-x-auto scrollbar-hide">
-        <div className="flex items-start justify-start md:justify-center gap-4 md:gap-8 min-w-max mx-auto pb-4">
+        <div className="flex items-start justify-start md:justify-center gap-4 md:gap-8 min-w-max mx-auto pb-4 mt-2 md:mt-4">
           {CATEGORIES.map((category) => (
             <Link
               key={category.id}
