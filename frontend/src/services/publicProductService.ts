@@ -4,6 +4,7 @@ export interface PublicProduct {
   description?: string;
   slug: string;
   category: any;
+  subCategory?: string;
   price: number;
   compareAtPrice?: number;
   discount: number;

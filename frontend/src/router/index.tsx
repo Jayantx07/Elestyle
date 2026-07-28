@@ -8,6 +8,7 @@ import ProfilePage from '@/pages/ProfilePage';
 
 import CategoryPage from '@/pages/CategoryPage';
 import SearchPage from '@/pages/SearchPage';
+import AboutPage from '@/pages/AboutPage';
 
 // Admin Imports
 import AdminRouteGuard from '@/admin/components/layout/AdminRouteGuard';
@@ -57,6 +58,10 @@ export const router = createBrowserRouter([
       {
         path: 'search',
         element: <SearchPage />,
+      },
+      {
+        path: 'about',
+        element: <AboutPage />,
       },
       // Additional routes will be added here
     ],

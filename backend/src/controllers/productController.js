@@ -68,7 +68,15 @@ exports.getPublicProducts = async (req, res) => {
 
 exports.getProductBySlug = async (req, res) => {
   try {
-    const product = await Product.findOne({ slug: req.params.slug, visibility: 'public' }).populate('category', 'name slug');
+    const { slug } = req.params;
+    let query = { slug, visibility: 'public' };
+    
+    // Fallback if the slug happens to be a valid MongoDB ObjectId (for older links)
+    if (require('mongoose').Types.ObjectId.isValid(slug)) {
+      query = { $or: [{ slug }, { _id: slug }], visibility: 'public' };
+    }
+
+    const product = await Product.findOne(query).populate('category', 'name slug');
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }

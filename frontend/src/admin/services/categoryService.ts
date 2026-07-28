@@ -15,6 +15,7 @@ export interface AdminCategory {
   showInSearch: boolean;
   seoTitle?: string;
   seoDescription?: string;
+  subCategories?: string[];
 }
 
 export const adminCategoryService = {

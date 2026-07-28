@@ -30,12 +30,12 @@ export default function ProductFormPage() {
 
   const [images, setImages] = useState<ImageMetadata[]>([]);
   const [tagInput, setTagInput] = useState('');
-  const [categoriesList, setCategoriesList] = useState<{label: string, value: string}[]>([]);
+  const [categoriesList, setCategoriesList] = useState<import('../services/categoryService').AdminCategory[]>([]);
 
   const fetchCategories = async () => {
     try {
       const data = await adminCategoryService.getCategories();
-      setCategoriesList(data.map(cat => ({ label: cat.name, value: cat._id })));
+      setCategoriesList(data);
     } catch(error) {
       console.error('Failed to fetch categories', error);
     }
@@ -143,10 +143,9 @@ export default function ProductFormPage() {
     try {
       setSaving(true);
       
-      // 1. Upload new images first to get Cloudinary URLs
       const categoryId = formData.category as string;
-      const categoryObj = categoriesList.find(c => c.value === categoryId);
-      const categoryName = categoryObj ? categoryObj.label : 'unnamed-category';
+      const categoryObj = categoriesList.find(c => c._id === categoryId);
+      const categoryName = categoryObj ? categoryObj.name : 'unnamed-category';
       
       const finalImages = await uploadNewImages(categoryName, formData.slug as string);
       
@@ -209,9 +208,27 @@ export default function ProductFormPage() {
               name="category"
               value={formData.category}
               onChange={handleChange}
-              options={categoriesList}
+              options={categoriesList.map(c => ({ label: c.name, value: c._id }))}
               required
             />
+            {(() => {
+              const selectedCategory = categoriesList.find(c => c._id === formData.category);
+              if (selectedCategory && selectedCategory.subCategories && selectedCategory.subCategories.length > 0) {
+                return (
+                  <FormSelect
+                    label="Sub-Category"
+                    name="subCategory"
+                    value={formData.subCategory || ''}
+                    onChange={handleChange}
+                    options={[
+                      { label: 'None', value: '' },
+                      ...selectedCategory.subCategories.map(sub => ({ label: sub, value: sub }))
+                    ]}
+                  />
+                );
+              }
+              return null;
+            })()}
             <FormSelect
               label="Status"
               name="status"

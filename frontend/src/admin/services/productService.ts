@@ -5,6 +5,7 @@ export interface AdminProduct {
   name: string;
   slug: string;
   category: string;
+  subCategory?: string;
   description: string;
   price: number;
   discount: number;

@@ -104,10 +104,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             ${price}
           </span>
         </div>
-        {/* Description: Inter, text-secondary */}
-        <p className="font-sans text-[13px] leading-normal" style={{ color: 'var(--text-secondary)' }}>
-          {description}
-        </p>
       </div>
     </div>
   );

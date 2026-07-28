@@ -14,6 +14,7 @@ export interface Category {
   seoTitle?: string;
   seoDescription?: string;
   isActive: boolean;
+  subCategories?: string[];
 }
 
 export const fetchPublicCategories = async (params: { navbar?: boolean, homepage?: boolean, carousel?: boolean, search?: boolean } = {}): Promise<Category[]> => {

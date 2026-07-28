@@ -65,7 +65,7 @@ export class SearchEngine {
           subtitle: prod.category.replace('-', ' '),
           image: prod.images[0],
           price: prod.price,
-          url: `/product/${prod.id}`,
+          url: `/product/${prod.slug}`,
           score,
           originalData: prod
         };

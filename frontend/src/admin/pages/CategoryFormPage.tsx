@@ -30,11 +30,14 @@ export default function CategoryFormPage() {
   const [bannerImages, setBannerImages] = useState<ImageMetadata[]>([]);
   const [icons, setIcons] = useState<ImageMetadata[]>([]);
 
+  const [subCategoriesInput, setSubCategoriesInput] = useState('');
+
   const fetchCategory = async (catId: string) => {
     try {
       setLoading(true);
       const data = await adminCategoryService.getCategoryById(catId);
       setFormData(data);
+      if (data.subCategories) setSubCategoriesInput(data.subCategories.join(', '));
       if (data.image) setImages([{ secure_url: data.image, public_id: '', previewUrl: data.image, isFeatured: false }]);
       if (data.bannerImage) setBannerImages([{ secure_url: data.bannerImage, public_id: '', previewUrl: data.bannerImage, isFeatured: false }]);
       if (data.icon) setIcons([{ secure_url: data.icon, public_id: '', previewUrl: data.icon, isFeatured: false }]);
@@ -99,6 +102,7 @@ export default function CategoryFormPage() {
 
       const payload = { 
         ...formData, 
+        subCategories: subCategoriesInput.split(',').map(s => s.trim()).filter(s => s !== ''),
         image: uploadedImage,
         bannerImage: uploadedBanner,
         icon: uploadedIcon 
@@ -159,6 +163,13 @@ export default function CategoryFormPage() {
               value={formData.description || ''}
               onChange={handleChange}
               rows={3}
+            />
+            <FormInput
+              label="Sub-Categories (comma separated)"
+              name="subCategories"
+              value={subCategoriesInput}
+              onChange={(e) => setSubCategoriesInput(e.target.value)}
+              helperText="E.g., Home Decor, Lighting, Vases"
             />
             <FormInput
               label="Display Order"

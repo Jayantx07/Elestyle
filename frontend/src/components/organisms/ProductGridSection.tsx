@@ -75,7 +75,7 @@ export const ProductGridSection: React.FC = () => {
               return (
                 <ProductCard
                   key={product._id}
-                  id={product._id}
+                  id={product.slug}
                   title={product.name}
                   price={product.price}
                   description={product.description || ''}
