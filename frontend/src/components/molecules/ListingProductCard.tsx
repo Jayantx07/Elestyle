@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export interface ListingProductCardProps {
-  id: string;
+  slug: string;
   imageSrc: string;
   altText?: string;
   category: string;
@@ -16,7 +16,7 @@ export interface ListingProductCardProps {
 }
 
 export const ListingProductCard: React.FC<ListingProductCardProps> = ({
-  id,
+  slug,
   imageSrc,
   altText,
   category,
@@ -38,7 +38,7 @@ export const ListingProductCard: React.FC<ListingProductCardProps> = ({
 
   return (
     <div
-      onClick={() => navigate(`/product/${id}`)}
+      onClick={() => navigate(`/product/${slug}`)}
       data-cursor="explore"
       data-cursor-text="VIEW"
       className="group flex flex-col cursor-pointer transition-all duration-300"
@@ -68,6 +68,7 @@ export const ListingProductCard: React.FC<ListingProductCardProps> = ({
         <div className="absolute top-4 right-4 z-10">
           <button
             onClick={handleFavorite}
+            data-cursor="hidden"
             aria-label={isFavorite ? `Remove ${title} from saved` : `Save ${title}`}
             className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm transition-transform duration-200 hover:scale-110"
           >

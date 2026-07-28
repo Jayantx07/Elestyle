@@ -58,6 +58,13 @@ html[data-category="wedding"] {
   --accent-secondary: #C9A05C;
 }
 
+html[data-category="furnishing"] {
+  --bg-page:          #F4F0E6;
+  --accent:           #5F7052;
+  --accent-hover:     #4C5A42;
+  --accent-secondary: #C9B79C;
+}
+
 /* ============================================================
    TAILWIND v4 THEME — Tailwind aliases referencing our vars
    ============================================================ */
@@ -70,6 +77,7 @@ html[data-category="wedding"] {
   --color-accent-gold: var(--accent-gold);
   --color-beige:      var(--border);
   --color-surface:    var(--surface-card);
+  --color-primary:    #000000;
 
   /* Fonts */
   --font-fraunces: "Fraunces", serif;

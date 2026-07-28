@@ -2,11 +2,12 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 export const CATEGORIES = [
-  { id: '1', slug: 'rajasthani-vibes', label: 'Rajasthani Vibes', imgSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527414/Rajasthani_Vibe_u6p0zm.jpg' },
-  { id: '2', slug: 'handmade-earrings', label: 'Handmade Earrings', imgSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527414/handmade_earrings_o0cb8h.jpg' },
-  { id: '3', slug: 'macrame-bags', label: 'Macrame Bags', imgSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527415/macrame_bags_waokfv.jpg' },
-  { id: '4', slug: 'handmade-soaps', label: 'Handmade Soaps', imgSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527414/handmade_candles_rwjvlj.jpg' },
-  { id: '5', slug: 'wedding-giveaway', label: 'Wedding Giveaway', imgSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527414/wedding_giveaways_aabxvh.jpg' },
+  { id: '1', slug: 'home-furnishing', label: 'Home Furnishing', imgSrc: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=2069&auto=format&fit=crop' },
+  { id: '2', slug: 'rajasthani-vibes', label: 'Rajasthani Vibes', imgSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527414/Rajasthani_Vibe_u6p0zm.jpg' },
+  { id: '3', slug: 'handmade-earrings', label: 'Handmade Earrings', imgSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527414/handmade_earrings_o0cb8h.jpg' },
+  { id: '4', slug: 'macrame-bags', label: 'Macrame Bags', imgSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527415/macrame_bags_waokfv.jpg' },
+  { id: '5', slug: 'handmade-soaps', label: 'Handmade Soaps', imgSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527414/handmade_candles_rwjvlj.jpg' },
+  { id: '6', slug: 'wedding-giveaway', label: 'Wedding Giveaway', imgSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527414/wedding_giveaways_aabxvh.jpg' },
 ];
 
 export const CircularCategoryCarousel: React.FC = () => {
@@ -20,7 +21,7 @@ export const CircularCategoryCarousel: React.FC = () => {
           {CATEGORIES.map((category) => (
             <Link
               key={category.id}
-              to={`/category/${category.slug}`}
+              to={`/shop/${category.slug}`}
               className="flex flex-col items-center gap-3 group shrink-0 w-24 md:w-32"
               aria-label={`Browse ${category.label}`}
               data-cursor="explore"

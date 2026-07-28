@@ -1,21 +1,49 @@
-import React, { useState, useEffect } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { useSearch } from '../../hooks/useSearch';
+import { LiveSearch } from './LiveSearch';
+import { IntentResolver } from '../../lib/search/resolver/IntentResolver';
 
 const LOGO_URL =
   'https://res.cloudinary.com/gc1qeznc/image/upload/v1784531072/logo_ellestyle_ierdp3.jpg';
 
 const NAV_LINKS = [
-  { label: 'Home Furnishing', href: '/' },
-  { label: 'Bags', href: '/category/macrame-bags' },
-  { label: 'Jewelry', href: '/category/handmade-earrings' },
-  { label: 'Handmade Soaps', href: '/category/handmade-soaps' },
-  { label: 'Wedding Giveaways', href: '/category/wedding-giveaway' },
+  { label: 'Macrame Bags', href: '/shop/macrame-bags' },
+  { label: 'Handmade Candles', href: '/shop/handmade-candles' },
+  { label: 'Handmade Earrings', href: '/shop/handmade-earrings' },
+  { label: 'Rajasthani Vibes', href: '/shop/rajasthani-vibes' },
+  { label: 'Wedding Giveaways', href: '/shop/wedding-giveaway' },
 ];
 
 export const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const { query, isSearching, result, handleQueryChange, clearSearch } = useSearch();
+
+  // Focus search input when opened
+  useEffect(() => {
+    if (isSearchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isSearchOpen]);
+
+  // Handle enter key for search
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && query.trim().length > 0) {
+      const url = IntentResolver.getNavigationUrl(result.intent, query, result.products[0], result.categories[0]);
+      navigate(url);
+      setIsSearchOpen(false);
+      clearSearch();
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -30,45 +58,34 @@ export const Navbar: React.FC = () => {
 
   return (
     <header className="fixed left-0 right-0 top-6 z-50 pointer-events-none">
-      <div className="mx-auto max-w-7xl px-4 md:px-6">
+      <div className="mx-auto max-w-[1200px] px-4 md:px-6">
         <div
-          className={`pointer-events-auto h-[78px] flex items-center justify-between px-8 md:px-12 rounded-[22px] transition-all duration-300 ${
-            isScrolled ? 'bg-white/95 backdrop-blur-md' : 'bg-white'
+          className={`pointer-events-auto h-[64px] md:h-[70px] flex items-center justify-between px-4 sm:px-6 md:px-8 rounded-full transition-all duration-300 border border-gray-100 ${
+            isScrolled ? 'bg-white/95 backdrop-blur-md shadow-md' : 'bg-white shadow-sm'
           }`}
-          style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.06)' }}
         >
         {/* Logo */}
-          <Link to="/" className="flex items-center gap-4 flex-shrink-0 mr-6 md:mr-12" aria-label="ElleStyle — Home">
+          <Link to="/" className="flex items-center flex-shrink-0" aria-label="ElleStyle — Home">
             <img
               src={LOGO_URL}
               alt="ElleStyle logo"
-              className="h-9 md:h-10 w-auto object-contain rounded-sm"
+              className="h-10 md:h-[46px] w-auto object-contain rounded-md"
               loading="eager"
             />
-            <span
-              className="font-fraunces text-[30px] leading-none"
-              style={{ letterSpacing: '1.2px', fontWeight: 400, color: 'var(--text-primary)' }}
-            >
-              ELLE STYLE
-            </span>
           </Link>
 
         {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center justify-center flex-1" aria-label="Main navigation">
-            <ul className="flex items-center gap-[56px]">
+          <nav className="hidden lg:flex items-center justify-center flex-1 mx-8" aria-label="Main navigation">
+            <ul className="flex items-center gap-6 xl:gap-8">
               {NAV_LINKS.map((link) => (
                 <li key={link.label}>
                   <NavLink
                     to={link.href}
                     className={({ isActive }) =>
-                      `font-sans text-[15px] ${isActive ? 'font-semibold' : 'font-medium'} transition-all duration-200`
+                      `font-sans text-[14px] ${isActive ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'} transition-all duration-200 hover:text-gray-900`
                     }
-                    style={({ isActive }) => ({
-                      color: isActive ? 'var(--accent)' : 'var(--text-primary)',
-                      letterSpacing: '0.3px',
-                    })}
                   >
-                    <span className="relative inline-block px-1 py-1 border-b-2 border-transparent hover:border-[var(--accent)] transition-all duration-200">
+                    <span>
                       {link.label}
                     </span>
                   </NavLink>
@@ -78,49 +95,89 @@ export const Navbar: React.FC = () => {
           </nav>
 
         {/* Right icons */}
-          <div className="flex items-center gap-6 md:gap-6">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-4 ml-auto">
           {/* Search */}
-          <button
-            aria-label="Search"
-            className="w-11 h-11 rounded-full flex items-center justify-center hover:bg-gray-100 transition-transform duration-150"
-            style={{ color: 'var(--text-primary)', transformOrigin: 'center' }}
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-          </button>
+          <div className="relative flex items-center" ref={searchContainerRef}>
+            {isSearchOpen ? (
+              <div className="flex items-center bg-gray-100 rounded-full px-3 py-1.5 md:py-2 transition-all w-[200px] sm:w-[250px] md:w-[300px]">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 mr-2 flex-shrink-0">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search products..."
+                  value={query}
+                  onChange={(e) => handleQueryChange(e.target.value)}
+                  onKeyDown={handleSearchKeyDown}
+                  className="bg-transparent border-none outline-none w-full text-sm text-gray-900 placeholder-gray-500"
+                />
+                <button onClick={() => { setIsSearchOpen(false); clearSearch(); }} className="text-gray-400 hover:text-gray-600 ml-2 flex-shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <button
+                aria-label="Search"
+                className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center hover:bg-gray-100 transition-transform duration-150"
+                style={{ color: 'var(--text-primary)', transformOrigin: 'center' }}
+                onClick={() => setIsSearchOpen(true)}
+              >
+                <svg width="20" height="20" className="md:w-[22px] md:h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+              </button>
+            )}
+            
+            {/* Live Search Dropdown */}
+            {isSearchOpen && (
+              <LiveSearch
+                query={query}
+                isSearching={isSearching}
+                result={result}
+                onClose={() => setIsSearchOpen(false)}
+                onSelectResult={() => { setIsSearchOpen(false); clearSearch(); }}
+              />
+            )}
+          </div>
 
           {/* Cart */}
-          <button
+          <Link
+            to="/cart"
             aria-label="Shopping bag"
-            className="w-11 h-11 rounded-full flex items-center justify-center hover:scale-105 transition-transform duration-150"
+            className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center hover:scale-105 transition-transform duration-150"
             style={{ color: 'var(--text-primary)', transformOrigin: 'center' }}
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="20" height="20" className="md:w-[22px] md:h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
               <line x1="3" y1="6" x2="21" y2="6" />
               <path d="M16 10a4 4 0 0 1-8 0" />
             </svg>
-          </button>
+          </Link>
 
-          {/* Account — desktop only */}
-          <button
+          {/* Account */}
+          <Link
+            to="/profile"
             aria-label="Account"
-            className="hidden sm:flex w-11 h-11 rounded-full items-center justify-center hover:scale-105 transition-transform duration-150"
+            className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center hover:scale-105 transition-transform duration-150"
             style={{ color: 'var(--text-primary)', transformOrigin: 'center' }}
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="20" height="20" className="md:w-[22px] md:h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
-          </button>
+          </Link>
 
           {/* Mobile hamburger */}
           <button
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
-            className="lg:hidden w-11 h-11 rounded-full flex items-center justify-center hover:bg-gray-100 transition-transform duration-150"
+            className="lg:hidden w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-transform duration-150"
             style={{ color: 'var(--text-primary)', transformOrigin: 'center' }}
             onClick={() => setMenuOpen((prev) => !prev)}
           >

@@ -65,6 +65,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <div className="absolute top-4 right-4 z-10">
           <button
             onClick={handleFavorite}
+            data-cursor="hidden"
             aria-label={isFavorite ? `Remove ${title} from saved` : `Save ${title}`}
             className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm transition-all duration-200 hover:scale-105"
           >

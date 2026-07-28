@@ -72,11 +72,11 @@ export const Footer: React.FC = () => {
           <div className="flex flex-col items-center gap-3 w-full md:w-auto">
             <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
               {[
-                { label: 'Home Furnishing', to: '/' },
-                { label: 'Bags', to: '/category/macrame-bags' },
-                { label: 'Jewelry', to: '/category/handmade-earrings' },
-                { label: 'Handmade Soaps', to: '/category/handmade-soaps' },
-                { label: 'Wedding Giveaways', to: '/category/wedding-giveaway' },
+                { label: 'Home Furnishing', to: '/shop/home-furnishing' },
+                { label: 'Bags', to: '/shop/macrame-bags' },
+                { label: 'Jewelry', to: '/shop/handmade-earrings' },
+                { label: 'Handmade Soaps', to: '/shop/handmade-soaps' },
+                { label: 'Wedding Giveaways', to: '/shop/wedding-giveaway' },
               ].map((link) => (
                 <Link
                   key={link.to}
