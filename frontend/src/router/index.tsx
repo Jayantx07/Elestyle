@@ -6,12 +6,7 @@ import ProductPage from '@/pages/ProductPage';
 import CartPage from '@/pages/CartPage';
 import ProfilePage from '@/pages/ProfilePage';
 
-import HomeFurnishingPage from '@/pages/HomeFurnishingPage';
-import MacrameBagsPage from '@/pages/MacrameBagsPage';
-import HandmadeSoapsPage from '@/pages/HandmadeSoapsPage';
-import HandmadeEarringsPage from '@/pages/HandmadeEarringsPage';
-import RajasthaniVibesPage from '@/pages/RajasthaniVibesPage';
-import WeddingGiveawaysPage from '@/pages/WeddingGiveawaysPage';
+import CategoryPage from '@/pages/CategoryPage';
 import SearchPage from '@/pages/SearchPage';
 
 // Admin Imports
@@ -44,28 +39,8 @@ export const router = createBrowserRouter([
         element: <Home />,
       },
       {
-        path: 'shop/home-furnishing',
-        element: <HomeFurnishingPage />,
-      },
-      {
-        path: 'shop/macrame-bags',
-        element: <MacrameBagsPage />,
-      },
-      {
-        path: 'shop/handmade-soaps',
-        element: <HandmadeSoapsPage />,
-      },
-      {
-        path: 'shop/handmade-earrings',
-        element: <HandmadeEarringsPage />,
-      },
-      {
-        path: 'shop/rajasthani-vibes',
-        element: <RajasthaniVibesPage />,
-      },
-      {
-        path: 'shop/wedding-giveaway',
-        element: <WeddingGiveawaysPage />,
+        path: 'shop/:categorySlug',
+        element: <CategoryPage />,
       },
       {
         path: 'product/:id',

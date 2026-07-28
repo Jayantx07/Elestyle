@@ -18,6 +18,46 @@ const categorySchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    image: {
+      type: String,
+      default: '',
+    },
+    bannerImage: {
+      type: String,
+      default: '',
+    },
+    icon: {
+      type: String,
+      default: '',
+    },
+    displayOrder: {
+      type: Number,
+      default: 0,
+    },
+    showInNavbar: {
+      type: Boolean,
+      default: false,
+    },
+    showInHomepage: {
+      type: Boolean,
+      default: false,
+    },
+    showInCircularCarousel: {
+      type: Boolean,
+      default: false,
+    },
+    showInSearch: {
+      type: Boolean,
+      default: true,
+    },
+    seoTitle: {
+      type: String,
+      trim: true,
+    },
+    seoDescription: {
+      type: String,
+      trim: true,
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -26,18 +66,10 @@ const categorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Middleware to automatically generate slug before saving
+// Middleware to automatically generate slug ONLY on creation if not provided
 categorySchema.pre('save', function () {
-  if (this.isModified('name')) {
+  if (this.isNew && !this.slug && this.name) {
     this.slug = slugify(this.name, { lower: true, strict: true });
-  }
-});
-
-// Middleware to regenerate slug on update operations
-categorySchema.pre('findOneAndUpdate', function () {
-  const update = this.getUpdate();
-  if (update.name) {
-    update.slug = slugify(update.name, { lower: true, strict: true });
   }
 });
 

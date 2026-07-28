@@ -5,12 +5,21 @@ export interface AdminCategory {
   name: string;
   slug: string;
   description: string;
-  image?: ImageMetadata;
+  image?: string;
+  bannerImage?: string;
+  icon?: string;
+  displayOrder: number;
+  showInNavbar: boolean;
+  showInHomepage: boolean;
+  showInCircularCarousel: boolean;
+  showInSearch: boolean;
+  seoTitle?: string;
+  seoDescription?: string;
 }
 
 export const adminCategoryService = {
   getCategories: async (): Promise<AdminCategory[]> => {
-    const res = await fetch('/api/v1/admin/categories');
+    const res = await fetch('/api/v1/admin/categories', { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch categories');
     const json = await res.json();
     return json.data;
@@ -49,6 +58,15 @@ export const adminCategoryService = {
     const res = await fetch(`/api/v1/admin/categories/${id}`, {
       method: 'DELETE'
     });
-    if (!res.ok) throw new Error('Failed to delete category');
+    if (!res.ok) {
+      let errorMessage = 'Failed to delete category';
+      try {
+        const json = await res.json();
+        if (json.message) errorMessage = json.message;
+      } catch (e) {
+        // Ignore json parse errors
+      }
+      throw new Error(errorMessage);
+    }
   }
 };

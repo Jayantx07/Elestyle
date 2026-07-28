@@ -3,20 +3,39 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useSearch } from '../../hooks/useSearch';
 import { LiveSearch } from './LiveSearch';
 import { IntentResolver } from '../../lib/search/resolver/IntentResolver';
+import { fetchPublicCategories } from '../../services/publicCategoryService';
 
 const LOGO_URL =
   'https://res.cloudinary.com/gc1qeznc/image/upload/v1784531072/logo_ellestyle_ierdp3.jpg';
 
-const NAV_LINKS = [
-  { label: 'Macrame Bags', href: '/shop/macrame-bags' },
-  { label: 'Handmade Candles', href: '/shop/handmade-candles' },
-  { label: 'Handmade Earrings', href: '/shop/handmade-earrings' },
-  { label: 'Rajasthani Vibes', href: '/shop/rajasthani-vibes' },
-  { label: 'Wedding Giveaways', href: '/shop/wedding-giveaway' },
-];
+// Dynamic navigation links are fetched from the API
 
 export const Navbar: React.FC = () => {
+  const [navLinks, setNavLinks] = useState<{label: string, href: string}[]>([]);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const loadCategories = () => {
+      fetchPublicCategories({ navbar: true }).then((cats) => {
+        setNavLinks(cats.map(c => ({ label: c.name, href: `/shop/${c.slug}` })));
+      });
+    };
+    
+    // Initial load
+    loadCategories();
+
+    // Listen for cross-tab or cross-component updates
+    const channel = new BroadcastChannel('category_updates');
+    channel.onmessage = (event) => {
+      if (event.data === 'updated') {
+        loadCategories();
+      }
+    };
+
+    return () => {
+      channel.close();
+    };
+  }, []);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   
@@ -77,7 +96,7 @@ export const Navbar: React.FC = () => {
         {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center justify-center flex-1 mx-8" aria-label="Main navigation">
             <ul className="flex items-center gap-6 xl:gap-8">
-              {NAV_LINKS.map((link) => (
+              {navLinks.map((link) => (
                 <li key={link.label}>
                   <NavLink
                     to={link.href}
@@ -205,7 +224,7 @@ export const Navbar: React.FC = () => {
           style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)', border: '1px solid var(--border)' }}
         >
           <nav className="flex flex-col py-4" aria-label="Mobile navigation">
-            {NAV_LINKS.map((link) => (
+            {navLinks.map((link) => (
               <NavLink
                 key={link.label}
                 to={link.href}

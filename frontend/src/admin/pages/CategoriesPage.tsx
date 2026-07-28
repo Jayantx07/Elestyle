@@ -14,6 +14,8 @@ export default function CategoriesPage() {
   
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<AdminCategory | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const fetchCategories = async () => {
     try {
@@ -34,19 +36,24 @@ export default function CategoriesPage() {
   const handleDeleteClick = (e: React.MouseEvent, category: AdminCategory) => {
     e.stopPropagation();
     setCategoryToDelete(category);
+    setDeleteError(null);
     setDeleteModalOpen(true);
   };
 
   const confirmDelete = async () => {
     if (!categoryToDelete) return;
     try {
+      setIsDeleting(true);
+      setDeleteError(null);
       await adminCategoryService.deleteCategory(categoryToDelete._id);
       setCategories(categories.filter(c => c._id !== categoryToDelete._id));
-    } catch (error) {
-      console.error('Failed to delete category', error);
-    } finally {
       setDeleteModalOpen(false);
       setCategoryToDelete(null);
+    } catch (error: any) {
+      console.error('Failed to delete category', error);
+      setDeleteError(error.message || 'Failed to delete category');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -58,7 +65,7 @@ export default function CategoriesPage() {
         <div className="flex items-center">
           <div className="h-10 w-10 flex-shrink-0 bg-gray-200 rounded-md overflow-hidden">
             {category.image ? (
-              <img src={category.image.secure_url || category.image.previewUrl} alt="" className="h-10 w-10 object-cover" />
+              <img src={category.image} alt="" className="h-10 w-10 object-cover" />
             ) : (
               <div className="h-10 w-10 bg-gray-200 flex items-center justify-center text-xs text-gray-500">No Img</div>
             )}
@@ -129,6 +136,8 @@ export default function CategoriesPage() {
         confirmLabel="Delete"
         onConfirm={confirmDelete}
         onCancel={() => setDeleteModalOpen(false)}
+        error={deleteError}
+        isLoading={isDeleting}
       />
     </div>
   );

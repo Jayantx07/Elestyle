@@ -1,6 +1,7 @@
 export interface PublicProduct {
   _id: string;
   name: string;
+  description?: string;
   slug: string;
   category: any;
   price: number;
@@ -72,6 +73,12 @@ export const publicProductService = {
   getRelatedProducts: async (slug: string) => {
     const res = await fetch(`/api/v1/products/related/${slug}`);
     if (!res.ok) throw new Error('Failed to fetch related products');
+    return res.json();
+  },
+
+  getProductsByCategorySlug: async (slug: string): Promise<PaginatedResponse<PublicProduct>> => {
+    const res = await fetch(`/api/v1/categories/${slug}/products`);
+    if (!res.ok) throw new Error('Failed to fetch products for category');
     return res.json();
   },
 };

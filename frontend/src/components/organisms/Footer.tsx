@@ -1,12 +1,21 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Input } from '../atoms/Input';
 import { Button } from '../atoms/Button';
+import { fetchPublicCategories, type Category } from '../../services/publicCategoryService';
 
 const LOGO_URL =
   'https://res.cloudinary.com/gc1qeznc/image/upload/v1784531072/logo_ellestyle_ierdp3.jpg';
 
 export const Footer: React.FC = () => {
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    fetchPublicCategories({ homepage: true }).then((cats) => {
+      setCategories(cats);
+    });
+  }, []);
+
   return (
     <footer className="pt-20 pb-10 px-8 md:px-16 rounded-[3rem] md:rounded-[4rem] mx-2 md:mx-4 mb-4 shadow-sm" style={{ backgroundColor: 'white' }}>
       <div className="max-w-7xl mx-auto">
@@ -71,22 +80,16 @@ export const Footer: React.FC = () => {
 
           <div className="flex flex-col items-center gap-3 w-full md:w-auto">
             <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-              {[
-                { label: 'Home Furnishing', to: '/shop/home-furnishing' },
-                { label: 'Bags', to: '/shop/macrame-bags' },
-                { label: 'Jewelry', to: '/shop/handmade-earrings' },
-                { label: 'Handmade Soaps', to: '/shop/handmade-soaps' },
-                { label: 'Wedding Giveaways', to: '/shop/wedding-giveaway' },
-              ].map((link) => (
+              {categories.slice(0, 5).map((category) => (
                 <Link
-                  key={link.to}
-                  to={link.to}
+                  key={category._id}
+                  to={`/shop/${category.slug}`}
                   className="font-sans text-xs transition-colors duration-200"
                   style={{ color: 'var(--text-primary)' }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent)')}
                   onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
                 >
-                  {link.label}
+                  {category.name}
                 </Link>
               ))}
             </nav>

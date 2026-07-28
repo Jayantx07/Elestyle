@@ -1,4 +1,5 @@
 const Category = require('../models/Category');
+const Product = require('../models/Product');
 
 exports.getCategories = async (req, res) => {
   try {
@@ -40,9 +41,17 @@ exports.updateCategory = async (req, res) => {
 
 exports.deleteCategory = async (req, res) => {
   try {
-    const category = await Category.findByIdAndUpdate(req.params.id, { isActive: false });
+    const productCount = await Product.countDocuments({ category: req.params.id });
+    if (productCount > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Cannot delete category because it has assigned products. Please move the products to another category or mark this category as inactive instead.' 
+      });
+    }
+
+    const category = await Category.findByIdAndDelete(req.params.id);
     if (!category) return res.status(404).json({ success: false, message: 'Category not found' });
-    res.status(200).json({ success: true, message: 'Category disabled' });
+    res.status(200).json({ success: true, message: 'Category deleted successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
