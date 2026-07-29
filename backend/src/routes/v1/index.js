@@ -7,6 +7,8 @@ router.get('/health', (req, res) => {
 
 const uploadRoutes = require('../uploadRoutes');
 const adminDashboardRoutes = require('../adminDashboardRoutes');
+const reviewStandaloneRoutes = require('../reviewStandaloneRoutes');
+const checkoutRoutes = require('../checkoutRoutes');
 const adminProductRoutes = require('../adminProductRoutes');
 const adminCategoryRoutes = require('../adminCategoryRoutes');
 const adminOrderRoutes = require('../adminOrderRoutes');
@@ -16,10 +18,14 @@ const adminInventoryRoutes = require('../adminInventoryRoutes');
 const adminCouponRoutes = require('../adminCouponRoutes');
 const adminAnalyticsRoutes = require('../adminAnalyticsRoutes');
 const adminSettingsRoutes = require('../adminSettingsRoutes');
+const authRoutes = require('../authRoutes');
 
+router.use('/auth', authRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/products', require('../productRoutes'));
 router.use('/categories', require('../categoryRoutes'));
+router.use('/reviews', reviewStandaloneRoutes);
+router.use('/checkout', checkoutRoutes);
 router.use('/admin/dashboard', adminDashboardRoutes);
 router.use('/admin/products', adminProductRoutes);
 router.use('/admin/categories', adminCategoryRoutes);

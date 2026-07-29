@@ -9,6 +9,15 @@ import ProfilePage from '@/pages/ProfilePage';
 import CategoryPage from '@/pages/CategoryPage';
 import SearchPage from '@/pages/SearchPage';
 import AboutPage from '@/pages/AboutPage';
+import CheckoutPage from '@/pages/CheckoutPage';
+
+// Auth Imports
+import ProtectedRoute from '@/components/common/ProtectedRoute';
+import LoginPage from '@/pages/auth/LoginPage';
+import SignupPage from '@/pages/auth/SignupPage';
+import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from '@/pages/auth/ResetPasswordPage';
+import VerifyEmailPage from '@/pages/auth/VerifyEmailPage';
 
 // Admin Imports
 import AdminRouteGuard from '@/admin/components/layout/AdminRouteGuard';
@@ -52,8 +61,37 @@ export const router = createBrowserRouter([
         element: <CartPage />,
       },
       {
-        path: 'profile',
-        element: <ProfilePage />,
+        element: <ProtectedRoute />,
+        children: [
+          {
+            path: 'profile',
+            element: <ProfilePage />,
+          },
+          {
+            path: 'checkout',
+            element: <CheckoutPage />,
+          },
+        ],
+      },
+      {
+        path: 'login',
+        element: <LoginPage />,
+      },
+      {
+        path: 'signup',
+        element: <SignupPage />,
+      },
+      {
+        path: 'forgot-password',
+        element: <ForgotPasswordPage />,
+      },
+      {
+        path: 'reset-password',
+        element: <ResetPasswordPage />,
+      },
+      {
+        path: 'verify-email',
+        element: <VerifyEmailPage />,
       },
       {
         path: 'search',

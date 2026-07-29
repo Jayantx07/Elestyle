@@ -27,7 +27,27 @@ const ProductPage: React.FC = () => {
         if (res.success && res.data) {
           const p = res.data;
           
-          // Map MongoDB product to component structure
+          // Fetch reviews
+          let reviews = [];
+          try {
+            const reviewRes = await publicProductService.getProductReviews(p._id);
+            if (reviewRes.success) {
+              reviews = reviewRes.data.map((r: any) => ({
+                id: r._id,
+                author: r.customerName,
+                avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(r.customerName)}&background=random`,
+                date: new Date(r.createdAt).toLocaleDateString(),
+                rating: r.rating,
+                text: r.comment,
+                images: r.images || [],
+                likes: r.likes || 0,
+                dislikes: r.dislikes || 0
+              }));
+            }
+          } catch (e) {
+            console.error('Failed to fetch reviews', e);
+          }
+
           const mappedProduct = {
             id: p._id,
             category: p.category?.name?.toLowerCase().replace(/ /g, '-') || 'default',
@@ -37,20 +57,9 @@ const ProductPage: React.FC = () => {
             imageSrc: p.images?.[0]?.secure_url || '',
             thumbnails: p.images?.map((img: any) => img.secure_url) || [],
             mainNotes: p.tags || [],
-            reviews: [
-              // Keep dummy reviews for now as backend reviews aren't fully implemented
-              {
-                id: 'r1',
-                author: 'Jane Doe',
-                avatar: 'https://ui-avatars.com/api/?name=Jane+Doe&background=random',
-                date: '1 Week ago',
-                rating: 5,
-                text: 'Absolutely love this product! The quality is amazing and it looks exactly like the pictures.',
-                images: [],
-                likes: 12,
-                dislikes: 0
-              }
-            ],
+            ratingAverage: p.ratingAverage || 0,
+            reviewCount: p.reviewCount || 0,
+            reviews: reviews,
             relatedProducts: [] // We'll set this separately
           };
           
@@ -110,7 +119,12 @@ const ProductPage: React.FC = () => {
 
       <ProductDetailSection product={productData} />
       
-      <ProductReviewSection reviews={productData.reviews} />
+      <ProductReviewSection 
+        productId={productData.id} 
+        ratingAverage={productData.ratingAverage}
+        reviewCount={productData.reviewCount}
+        reviews={productData.reviews} 
+      />
 
       {relatedProducts.length > 0 && (
         <section className="py-16 md:py-24 px-4 w-full" style={{ backgroundColor: 'var(--bg-page)' }}>

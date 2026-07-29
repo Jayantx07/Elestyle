@@ -82,4 +82,26 @@ export const publicProductService = {
     if (!res.ok) throw new Error('Failed to fetch products for category');
     return res.json();
   },
+
+  getProductReviews: async (productId: string) => {
+    const res = await fetch(`/api/v1/products/${productId}/reviews`);
+    if (!res.ok) throw new Error('Failed to fetch reviews');
+    return res.json();
+  },
+
+  getHighlightedReviews: async () => {
+    const res = await fetch('/api/v1/reviews/highlighted');
+    if (!res.ok) throw new Error('Failed to fetch highlighted reviews');
+    return res.json();
+  },
+
+  voteReview: async (reviewId: string, type: 'like' | 'dislike') => {
+    const res = await fetch(`/api/v1/reviews/${reviewId}/vote`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type })
+    });
+    if (!res.ok) throw new Error('Failed to vote on review');
+    return res.json();
+  },
 };

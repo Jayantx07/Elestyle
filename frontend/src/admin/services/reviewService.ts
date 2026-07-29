@@ -4,7 +4,7 @@ export interface AdminReview {
   customerName: string;
   rating: number;
   comment: string;
-  status: 'Pending' | 'Approved' | 'Rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'spam';
   date: string;
 }
 
@@ -16,7 +16,7 @@ export const adminReviewService = {
     return json.data;
   },
 
-  updateReviewStatus: async (id: string, status: 'Approved' | 'Rejected'): Promise<AdminReview> => {
+  updateReviewStatus: async (id: string, status: 'approved' | 'rejected'): Promise<AdminReview> => {
     const res = await fetch(`/api/v1/admin/reviews/${id}/status`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -32,5 +32,32 @@ export const adminReviewService = {
       method: 'DELETE'
     });
     if (!res.ok) throw new Error('Failed to delete review');
+  },
+
+  createReview: async (data: { product: string; customerName: string; rating: number; comment: string; }): Promise<AdminReview> => {
+    // Actually we can hit the public endpoint but pretend we are auto-approving it since we're admin.
+    // Or hit a specific admin endpoint if we created one.
+    // Wait, the backend has POST /api/v1/products/:productId/reviews but the admin doesn't have an explicit create review route in backend.
+    // Let's use the public one, and then immediately update it to Approved.
+    const res = await fetch(`/api/v1/products/${data.product}/reviews`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customerName: data.customerName,
+        customerEmail: 'admin@elestyle.in',
+        rating: data.rating,
+        comment: data.comment
+      })
+    });
+    if (!res.ok) throw new Error('Failed to create review');
+    const json = await res.json();
+    
+    // Now approve it
+    if (json.data && json.data._id) {
+      await adminReviewService.updateReviewStatus(json.data._id, 'approved');
+      json.data.status = 'approved';
+    }
+    
+    return json.data;
   }
 };

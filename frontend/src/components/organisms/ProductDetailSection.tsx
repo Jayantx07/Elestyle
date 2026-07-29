@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../atoms/Button';
 import { Typography } from '../atoms/Typography';
+import { useCart } from '../../contexts/CartContext';
+import { useWishlist } from '../../contexts/WishlistContext';
 
 export interface ProductDetailSectionProps {
   product: {
+    id: string;
     title: string;
     price: number;
     description: string;
@@ -19,18 +23,87 @@ export const ProductDetailSection: React.FC<ProductDetailSectionProps> = ({ prod
   const [isDescOpen, setIsDescOpen] = useState(true);
   const [isDeliveryOpen, setIsDeliveryOpen] = useState(true);
 
+  // Magnifier state
+  const [backgroundPosition, setBackgroundPosition] = useState('0% 0%');
+  const [showMagnifier, setShowMagnifier] = useState(false);
+  const isTouchDevice = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  
+  const inWishlist = isInWishlist(product.id);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isTouchDevice) return;
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+    setBackgroundPosition(`${x}% ${y}%`);
+  };
+
+  const handleAddToCart = () => {
+    addToCart({
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      imageSrc: product.imageSrc,
+      quantity,
+    });
+  };
+
+  const handleBuyNow = () => {
+    sessionStorage.setItem('temp_checkout_session', JSON.stringify([{
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      imageSrc: product.imageSrc,
+      quantity,
+    }]));
+    navigate('/checkout?session=temp');
+  };
+
+  const toggleWishlist = () => {
+    if (inWishlist) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist({
+        id: product.id,
+        title: product.title,
+        price: product.price,
+        imageSrc: product.imageSrc,
+      });
+    }
+  };
+
   return (
     <section className="py-12 md:py-20 px-4 max-w-7xl mx-auto w-full" style={{ backgroundColor: 'var(--bg-page)' }}>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
         
         {/* Left Column: Images */}
         <div className="flex flex-col gap-6">
-          <div className="w-full aspect-[4/5] lg:aspect-square rounded-[32px] overflow-hidden bg-black/5" style={{ borderColor: 'var(--border)', borderWidth: '1px' }}>
+          <div 
+            className="w-full aspect-[4/5] lg:aspect-square rounded-[32px] overflow-hidden bg-black/5 relative cursor-zoom-in" 
+            style={{ borderColor: 'var(--border)', borderWidth: '1px' }}
+            onMouseMove={handleMouseMove}
+            onMouseEnter={() => !isTouchDevice && setShowMagnifier(true)}
+            onMouseLeave={() => setShowMagnifier(false)}
+          >
             <img 
               src={activeImage} 
               alt={product.title} 
-              className="w-full h-full object-cover transition-opacity duration-500"
+              className={`w-full h-full object-cover transition-opacity duration-500 ${showMagnifier ? 'opacity-0' : 'opacity-100'}`}
             />
+            {showMagnifier && !isTouchDevice && (
+              <div 
+                className="absolute inset-0 bg-no-repeat"
+                style={{
+                  backgroundImage: `url(${activeImage})`,
+                  backgroundPosition,
+                  backgroundSize: '200%', // Adjust scale for magnification
+                }}
+              />
+            )}
           </div>
           <div className="grid grid-cols-3 gap-4">
             {product.thumbnails.map((thumb, idx) => (
@@ -105,12 +178,22 @@ export const ProductDetailSection: React.FC<ProductDetailSectionProps> = ({ prod
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4 w-full">
-              <Button variant="outline" className="flex-1 rounded-full border border-black/20 hover:border-black/50" style={{ color: 'var(--text-primary)' }}>
+              <Button onClick={handleAddToCart} variant="outline" className="flex-1 rounded-full border border-black/20 hover:border-black/50" style={{ color: 'var(--text-primary)' }}>
                 Add to Cart
               </Button>
-              <Button variant="secondary" className="flex-1 rounded-full bg-black text-white">
+              <Button onClick={handleBuyNow} variant="secondary" className="flex-1 rounded-full bg-black text-white">
                 Buy Now
               </Button>
+              <button 
+                onClick={toggleWishlist}
+                className="w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-full border border-black/20 hover:border-black/50 transition-colors"
+                aria-label="Toggle wishlist"
+                style={{ color: inWishlist ? 'red' : 'var(--text-primary)' }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill={inWishlist ? "red" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+              </button>
             </div>
           </div>
 

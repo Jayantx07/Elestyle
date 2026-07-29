@@ -1,15 +1,8 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useAuth } from '../../../contexts/AuthContext';
 
 export default function AdminRouteGuard() {
-  // TODO: Replace with actual authentication context/hook once backend is ready
-  const [isAuthenticated] = useState(true);
-  const [isLoading] = useState(false);
-
-  useEffect(() => {
-    // Simulate auth check
-    // setIsAuthenticated(checkAuthStatus());
-  }, []);
+  const { user, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -19,8 +12,8 @@ export default function AdminRouteGuard() {
     );
   }
 
-  if (!isAuthenticated) {
-    // Redirect to login page if not authenticated
+  if (!user || user.role !== 'admin') {
+    // Redirect to login page if not authenticated or not an admin
     return <Navigate to="/login" replace />;
   }
 

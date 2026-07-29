@@ -13,6 +13,9 @@ export default function ReviewsPage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState<AdminReview | null>(null);
 
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [newReview, setNewReview] = useState({ product: '', customerName: '', rating: 5, comment: '' });
+
   const fetchReviews = async () => {
     try {
       setLoading(true);
@@ -29,7 +32,7 @@ export default function ReviewsPage() {
     fetchReviews();
   }, []);
 
-  const handleStatusChange = async (review: AdminReview, newStatus: 'Approved' | 'Rejected') => {
+  const handleStatusChange = async (review: AdminReview, newStatus: 'approved' | 'rejected') => {
     try {
       await adminReviewService.updateReviewStatus(review._id, newStatus);
       setReviews(reviews.map(r => r._id === review._id ? { ...r, status: newStatus } : r));
@@ -55,6 +58,19 @@ export default function ReviewsPage() {
     } finally {
       setDeleteModalOpen(false);
       setReviewToDelete(null);
+    }
+  };
+
+  const handleCreateReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await adminReviewService.createReview(newReview);
+      setCreateModalOpen(false);
+      setNewReview({ product: '', customerName: '', rating: 5, comment: '' });
+      fetchReviews();
+    } catch (error) {
+      console.error('Failed to create review', error);
+      alert('Failed to create review. Make sure the Product ID is valid.');
     }
   };
 
@@ -98,10 +114,10 @@ export default function ReviewsPage() {
       render: (review) => (
         <StatusBadge 
           status={
-            review.status === 'Approved' ? 'success' :
-            review.status === 'Rejected' ? 'error' : 'warning'
+            review.status === 'approved' ? 'success' :
+            review.status === 'rejected' ? 'error' : 'warning'
           } 
-          label={review.status} 
+          label={review.status.charAt(0).toUpperCase() + review.status.slice(1)} 
         />
       )
     },
@@ -110,17 +126,17 @@ export default function ReviewsPage() {
       header: 'Actions',
       render: (review) => (
         <div className="flex space-x-2">
-          {review.status !== 'Approved' && (
+          {review.status !== 'approved' && (
             <button
-              onClick={() => handleStatusChange(review, 'Approved')}
+              onClick={() => handleStatusChange(review, 'approved')}
               className="text-green-600 hover:text-green-800 text-sm font-medium"
             >
               Approve
             </button>
           )}
-          {review.status !== 'Rejected' && (
+          {review.status !== 'rejected' && (
             <button
-              onClick={() => handleStatusChange(review, 'Rejected')}
+              onClick={() => handleStatusChange(review, 'rejected')}
               className="text-orange-600 hover:text-orange-800 text-sm font-medium"
             >
               Reject
@@ -145,7 +161,15 @@ export default function ReviewsPage() {
 
   return (
     <div>
-      <PageHeader title="Reviews" />
+      <div className="flex justify-between items-center mb-6">
+        <PageHeader title="Reviews" />
+        <button 
+          onClick={() => setCreateModalOpen(true)}
+          className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+        >
+          Add Review
+        </button>
+      </div>
 
       <DataTable
         data={filteredReviews}
@@ -165,6 +189,38 @@ export default function ReviewsPage() {
         onConfirm={confirmDelete}
         onCancel={() => setDeleteModalOpen(false)}
       />
+
+      {createModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-bold mb-4">Add Manual Review</h3>
+            <form onSubmit={handleCreateReview} className="flex flex-col gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Product ID (MongoDB ID)</label>
+                <input required type="text" value={newReview.product} onChange={e => setNewReview({...newReview, product: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-black" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Customer Name</label>
+                <input required type="text" value={newReview.customerName} onChange={e => setNewReview({...newReview, customerName: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-black" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Rating</label>
+                <select value={newReview.rating} onChange={e => setNewReview({...newReview, rating: Number(e.target.value)})} className="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-black">
+                  {[5,4,3,2,1].map(n => <option key={n} value={n}>{n} Stars</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Comment</label>
+                <textarea required value={newReview.comment} onChange={e => setNewReview({...newReview, comment: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-black h-24" />
+              </div>
+              <div className="flex justify-end gap-3 mt-2">
+                <button type="button" onClick={() => setCreateModalOpen(false)} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+                <button type="submit" className="px-4 py-2 text-sm bg-black text-white rounded-lg hover:bg-gray-800">Create</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

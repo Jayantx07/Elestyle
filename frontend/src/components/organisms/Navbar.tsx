@@ -4,6 +4,8 @@ import { useSearch } from '../../hooks/useSearch';
 import { LiveSearch } from './LiveSearch';
 import { IntentResolver } from '../../lib/search/resolver/IntentResolver';
 import { fetchPublicCategories } from '../../services/publicCategoryService';
+import { useCart } from '../../contexts/CartContext';
+import { useWishlist } from '../../contexts/WishlistContext';
 
 const LOGO_URL =
   'https://res.cloudinary.com/gc1qeznc/image/upload/v1784531072/logo_ellestyle_ierdp3.jpg';
@@ -41,6 +43,9 @@ export const Navbar: React.FC = () => {
   
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  
+  const { itemCount: cartItemCount } = useCart();
+  const { itemCount: wishlistItemCount } = useWishlist();
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -169,7 +174,7 @@ export const Navbar: React.FC = () => {
           <Link
             to="/cart"
             aria-label="Shopping bag"
-            className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center hover:scale-105 transition-transform duration-150"
+            className="relative w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center hover:scale-105 transition-transform duration-150"
             style={{ color: 'var(--text-primary)', transformOrigin: 'center' }}
           >
             <svg width="20" height="20" className="md:w-[22px] md:h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -177,6 +182,28 @@ export const Navbar: React.FC = () => {
               <line x1="3" y1="6" x2="21" y2="6" />
               <path d="M16 10a4 4 0 0 1-8 0" />
             </svg>
+            {cartItemCount > 0 && (
+              <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+                {cartItemCount}
+              </span>
+            )}
+          </Link>
+
+          {/* Wishlist */}
+          <Link
+            to="/wishlist"
+            aria-label="Wishlist"
+            className="relative w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center hover:scale-105 transition-transform duration-150"
+            style={{ color: 'var(--text-primary)', transformOrigin: 'center' }}
+          >
+            <svg width="20" height="20" className="md:w-[22px] md:h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+            {wishlistItemCount > 0 && (
+              <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+                {wishlistItemCount}
+              </span>
+            )}
           </Link>
 
           {/* Account */}

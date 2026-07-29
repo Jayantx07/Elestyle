@@ -13,12 +13,22 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@react-email/components": "^1.0.12",
+    "@react-email/render": "^2.1.0",
+    "bcrypt": "^6.0.0",
     "cloudinary": "^2.10.0",
+    "cookie-parser": "^1.4.7",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.6.1",
+    "google-auth-library": "^10.9.1",
+    "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.7.4",
     "morgan": "^1.11.0",
     "multer": "^2.2.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "resend": "^6.18.1",
     "slugify": "^1.6.9",
     "streamifier": "^0.1.1"
   }
