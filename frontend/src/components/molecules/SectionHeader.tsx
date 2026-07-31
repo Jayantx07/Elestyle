@@ -1,6 +1,5 @@
 import React from 'react';
 import { Typography } from '../atoms/Typography';
-import { IconButton } from '../atoms/IconButton';
 
 export interface SectionHeaderProps {
   subtitle?: string;

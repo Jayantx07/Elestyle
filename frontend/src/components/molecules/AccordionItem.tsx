@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Typography } from '../atoms/Typography';
 
 export interface AccordionItemProps {
   question: string;

@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { UploadCloud, X, Star, MoveLeft, MoveRight } from 'lucide-react';
 
 export interface ImageMetadata {
@@ -22,8 +22,8 @@ export function ImageUpload({
   images,
   onChange,
   maxImages = 10,
-  category,
-  productSlug,
+  category: _category,
+  productSlug: _productSlug,
 }: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);

@@ -9,10 +9,20 @@ const setTokenCookie = (res, token) => {
   });
 };
 
+const formatUserResponse = (user) => ({
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  phone: user.phone || '',
+  role: user.role,
+  profileImage: user.profileImage,
+  isEmailVerified: user.isEmailVerified,
+});
+
 exports.signup = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
-    await authService.signup(name, email, password);
+    const { name, email, password, phone } = req.body;
+    await authService.signup(name, email, password, phone);
     res.status(201).json({
       success: true,
       message: 'Registration successful. Please check your email to verify your account.',
@@ -26,8 +36,27 @@ exports.verifyEmail = async (req, res, next) => {
   try {
     const { token } = req.body;
     if (!token) return res.status(400).json({ success: false, message: 'Token is required' });
-    await authService.verifyEmail(token);
-    res.status(200).json({ success: true, message: 'Email verified successfully' });
+    const { user, accessToken, refreshToken } = await authService.verifyEmail(token);
+    setTokenCookie(res, refreshToken);
+    res.status(200).json({
+      success: true,
+      message: 'Email verified successfully',
+      accessToken,
+      user: formatUserResponse(user),
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+exports.resendVerification = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    await authService.resendVerificationEmail(email);
+    res.status(200).json({
+      success: true,
+      message: 'Verification email sent. Please check your inbox.',
+    });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
@@ -41,16 +70,14 @@ exports.login = async (req, res, next) => {
     res.status(200).json({
       success: true,
       accessToken,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        profileImage: user.profileImage,
-      },
+      user: formatUserResponse(user),
     });
   } catch (error) {
-    res.status(401).json({ success: false, message: error.message });
+    res.status(401).json({
+      success: false,
+      message: error.message,
+      isUnverified: !!error.isUnverified,
+    });
   }
 };
 
@@ -64,16 +91,23 @@ exports.googleAuth = async (req, res, next) => {
     res.status(200).json({
       success: true,
       accessToken,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        profileImage: user.profileImage,
-      },
+      user: formatUserResponse(user),
     });
   } catch (error) {
     res.status(401).json({ success: false, message: error.message });
+  }
+};
+
+exports.updateProfile = async (req, res, next) => {
+  try {
+    const { name, phone } = req.body;
+    const updatedUser = await authService.updateProfile(req.user._id, { name, phone });
+    res.status(200).json({
+      success: true,
+      user: formatUserResponse(updatedUser),
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 
@@ -113,13 +147,7 @@ exports.refreshToken = async (req, res, next) => {
     res.status(200).json({
       success: true,
       accessToken,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        profileImage: user.profileImage,
-      }
+      user: formatUserResponse(user),
     });
   } catch (error) {
     res.status(401).json({ success: false, message: error.message });
@@ -144,15 +172,10 @@ exports.logout = async (req, res, next) => {
 
 exports.getMe = async (req, res, next) => {
   try {
-    // req.user is populated by protect middleware
     res.status(200).json({
       success: true,
       user: {
-        id: req.user._id,
-        name: req.user.name,
-        email: req.user.email,
-        role: req.user.role,
-        profileImage: req.user.profileImage,
+        ...formatUserResponse(req.user),
         addresses: req.user.addresses,
       }
     });

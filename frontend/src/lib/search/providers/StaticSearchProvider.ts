@@ -1,8 +1,8 @@
 import { SearchEngine } from '../engine/engine';
 import type { ISearchProvider, SearchResult } from '../types';
-import { PRODUCTS } from '../../../data/products';
 import { CATEGORIES } from '../../../data/categories';
 import { SearchConfig } from '../config/config';
+import { PRODUCTS } from '../../../data/products';
 
 export class StaticSearchProvider implements ISearchProvider {
   private engine: SearchEngine;

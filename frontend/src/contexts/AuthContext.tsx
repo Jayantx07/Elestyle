@@ -1,12 +1,15 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { authService } from '../services/authService';
 
 export interface User {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   role: string;
   profileImage: string;
+  isEmailVerified?: boolean;
 }
 
 interface AuthContextType {
@@ -16,6 +19,7 @@ interface AuthContextType {
   login: (userData: User, token: string) => void;
   logout: () => Promise<void>;
   updateUser: (userData: User) => void;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -66,8 +70,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(userData);
   };
 
+  const refreshProfile = async () => {
+    if (!accessToken) return;
+    try {
+      const data = await authService.getMe(accessToken);
+      if (data.success && data.user) {
+        setUser(data.user);
+      }
+    } catch (error) {
+      console.error('Failed to refresh profile', error);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, accessToken, isLoading, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, accessToken, isLoading, login, logout, updateUser, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

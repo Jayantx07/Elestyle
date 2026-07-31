@@ -6,6 +6,7 @@ import { IntentResolver } from '../../lib/search/resolver/IntentResolver';
 import { fetchPublicCategories } from '../../services/publicCategoryService';
 import { useCart } from '../../contexts/CartContext';
 import { useWishlist } from '../../contexts/WishlistContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 const LOGO_URL =
   'https://res.cloudinary.com/gc1qeznc/image/upload/v1784531072/logo_ellestyle_ierdp3.jpg';
@@ -46,6 +47,7 @@ export const Navbar: React.FC = () => {
   
   const { itemCount: cartItemCount } = useCart();
   const { itemCount: wishlistItemCount } = useWishlist();
+  const { user } = useAuth();
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -208,15 +210,24 @@ export const Navbar: React.FC = () => {
 
           {/* Account */}
           <Link
-            to="/profile"
-            aria-label="Account"
-            className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center hover:scale-105 transition-transform duration-150"
+            to={user ? "/profile" : "/login"}
+            aria-label={user ? `Profile (${user.name})` : "Sign In"}
+            title={user ? user.name : "Sign In"}
+            className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center overflow-hidden border border-gray-200 hover:scale-105 transition-transform duration-150"
             style={{ color: 'var(--text-primary)', transformOrigin: 'center' }}
           >
-            <svg width="20" height="20" className="md:w-[22px] md:h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
+            {user ? (
+              <img
+                src={user.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`}
+                alt={user.name}
+                className="w-full h-full object-cover rounded-full"
+              />
+            ) : (
+              <svg width="20" height="20" className="md:w-[22px] md:h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            )}
           </Link>
 
           {/* Mobile hamburger */}

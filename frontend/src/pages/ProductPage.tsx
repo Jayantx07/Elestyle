@@ -4,7 +4,7 @@ import { ProductDetailSection } from '../components/organisms/ProductDetailSecti
 import { ProductReviewSection } from '../components/organisms/ProductReviewSection';
 import { ProductCard } from '../components/molecules/ProductCard';
 import { Typography } from '../components/atoms/Typography';
-import { publicProductService, type PublicProduct } from '../services/publicProductService';
+import { publicProductService } from '../services/publicProductService';
 
 const ProductPage: React.FC = () => {
   const { id: slug } = useParams<{ id: string }>();

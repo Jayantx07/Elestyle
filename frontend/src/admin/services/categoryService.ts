@@ -1,5 +1,3 @@
-import type { ImageMetadata } from '../components/shared/ImageUpload';
-
 export interface AdminCategory {
   _id: string;
   name: string;

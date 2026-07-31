@@ -1,20 +1,54 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ProfileCard } from '../components/organisms/ProfileCard';
 import { ProfileSettingsList, type SettingItem } from '../components/organisms/ProfileSettingsList';
-import { Typography } from '../components/atoms/Typography';
-
-const DUMMY_USER = {
-  name: "James",
-  avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&q=80",
-  verificationProgress: 80,
-};
+import { useAuth } from '../contexts/AuthContext';
+import { authService } from '../services/authService';
 
 const ProfilePage: React.FC = () => {
+  const { user, accessToken, updateUser, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(user?.name || '');
+  const [editPhone, setEditPhone] = useState(user?.phone || '');
+  const [isSaving, setIsSaving] = useState(false);
+  const [editError, setEditError] = useState('');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
-  }, []);
+    if (user) {
+      setEditName(user.name || '');
+      setEditPhone(user.phone || '');
+    }
+  }, [user]);
 
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!accessToken) return;
+    setIsSaving(true);
+    setEditError('');
+
+    try {
+      const data = await authService.updateProfile({ name: editName, phone: editPhone }, accessToken);
+      if (data.success && data.user) {
+        updateUser(data.user);
+        setIsEditing(false);
+      } else {
+        setEditError(data.message || 'Failed to update profile');
+      }
+    } catch (err: any) {
+      setEditError(err.message || 'An error occurred updating profile');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
 
   // SVG Icons for the settings
   const EmailIcon = (
@@ -37,27 +71,43 @@ const ProfilePage: React.FC = () => {
     </svg>
   );
 
-  const AddressIcon = (
+  const LogoutIcon = (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-      <circle cx="12" cy="10" r="3" />
-    </svg>
-  );
-
-  const LanguageIcon = (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <line x1="2" y1="12" x2="22" y2="12" />
-      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
     </svg>
   );
 
   const settingsItems: SettingItem[] = [
-    { id: 'email', label: 'Email', icon: EmailIcon, type: 'link' },
-    { id: 'phone', label: 'Phone', icon: PhoneIcon, type: 'link' },
-    { id: 'notification', label: 'Notification', icon: NotificationIcon, type: 'toggle', isActive: notificationsEnabled },
-    { id: 'address', label: 'Saved address', icon: AddressIcon, type: 'link' },
-    { id: 'language', label: 'Select language', icon: LanguageIcon, type: 'link' },
+    { 
+      id: 'email', 
+      label: `Email: ${user?.email || 'N/A'}`, 
+      icon: EmailIcon, 
+      type: 'link',
+      onClick: () => {}
+    },
+    { 
+      id: 'phone', 
+      label: `Phone: ${user?.phone || 'Not provided'}`, 
+      icon: PhoneIcon, 
+      type: 'link',
+      onClick: () => setIsEditing(true)
+    },
+    { 
+      id: 'notification', 
+      label: 'Notification', 
+      icon: NotificationIcon, 
+      type: 'toggle', 
+      isActive: notificationsEnabled 
+    },
+    { 
+      id: 'logout', 
+      label: 'Sign Out', 
+      icon: LogoutIcon, 
+      type: 'link',
+      onClick: handleLogout
+    },
   ];
 
   const handleToggleChange = (id: string, newValue: boolean) => {
@@ -66,13 +116,18 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  const verificationProgress = user?.isEmailVerified ? 100 : 50;
+
   return (
     <div className="min-h-screen pt-32 pb-24 md:pt-40 px-4 md:px-8 bg-[#EAF3EB]">
       <div className="max-w-6xl mx-auto">
         
-        {/* Page Title (Visible on mobile like the image, positioned cleanly on desktop) */}
+        {/* Page Title */}
         <div className="flex items-center justify-between md:justify-start gap-4 mb-8">
-          <button className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center md:hidden">
+          <button 
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center md:hidden"
+          >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="15 18 9 12 15 6"></polyline>
             </svg>
@@ -81,29 +136,24 @@ const ProfilePage: React.FC = () => {
           <h1 className="font-fraunces font-medium text-2xl md:text-4xl text-center flex-1 md:flex-none" style={{ color: 'var(--text-primary)' }}>
             Profile
           </h1>
-          
-          <button className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center md:hidden">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-            </svg>
-          </button>
         </div>
 
         {/* Responsive Grid Layout */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 lg:gap-16 items-start">
           
-          {/* Left Column (Mobile Top): Profile Card */}
+          {/* Left Column: Profile Card */}
           <div className="md:col-span-5 lg:col-span-4 md:sticky md:top-32">
             <ProfileCard 
-              name={DUMMY_USER.name}
-              avatarUrl={DUMMY_USER.avatarUrl}
-              verificationProgress={DUMMY_USER.verificationProgress}
-              onEditProfile={() => alert('Edit Profile clicked')}
+              name={user?.name || 'User'}
+              email={user?.email}
+              phone={user?.phone}
+              avatarUrl={user?.profileImage || ''}
+              verificationProgress={verificationProgress}
+              onEditProfile={() => setIsEditing(true)}
             />
           </div>
 
-          {/* Right Column (Mobile Bottom): Settings List */}
+          {/* Right Column: Settings List */}
           <div className="md:col-span-7 lg:col-span-8 md:pt-16">
             <ProfileSettingsList 
               items={settingsItems} 
@@ -114,6 +164,77 @@ const ProfilePage: React.FC = () => {
         </div>
 
       </div>
+
+      {/* Edit Profile Modal */}
+      {isEditing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold font-fraunces text-gray-900">Edit Profile</h3>
+              <button
+                onClick={() => setIsEditing(false)}
+                className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            {editError && (
+              <div className="p-3 bg-red-50 text-red-600 rounded-xl text-xs font-medium">
+                {editError}
+              </div>
+            )}
+
+            <form onSubmit={handleSaveProfile} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 py-2.5 px-4 text-gray-900 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  placeholder="+1 (555) 000-0000"
+                  className="w-full rounded-xl border border-gray-200 py-2.5 px-4 text-gray-900 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black transition"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="px-5 py-2 rounded-xl text-sm font-semibold bg-black text-white hover:bg-gray-800 transition active:scale-95 disabled:opacity-50"
+                >
+                  {isSaving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

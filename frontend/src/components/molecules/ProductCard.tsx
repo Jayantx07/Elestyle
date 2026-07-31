@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IconButton } from '../atoms/IconButton';
 
 export interface ProductCardProps {
   id?: string;
@@ -21,7 +20,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   altText,
   title,
   price,
-  description,
   isFavorite: isFavoriteProp = false,
   onFavoriteToggle,
   className = '',

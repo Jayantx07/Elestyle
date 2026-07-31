@@ -1,6 +1,5 @@
 import React from 'react';
 import { SectionHeader } from '../molecules/SectionHeader';
-import { ReviewTextCard } from '../molecules/ReviewTextCard';
 import { ReviewVisualCard } from '../molecules/ReviewVisualCard';
 
 export const TestimonialSection: React.FC = () => {

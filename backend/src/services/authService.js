@@ -47,7 +47,7 @@ class AuthService {
     return { token, hashedToken };
   }
 
-  async signup(name, email, password) {
+  async signup(name, email, password, phone = '') {
     let user = await User.findOne({ email });
     if (user) {
       throw new Error('User already exists');
@@ -60,31 +60,91 @@ class AuthService {
       name,
       email,
       password: hashedPassword,
+      phone: phone || undefined,
       emailVerificationToken: hashedToken,
       emailVerificationExpire: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
     });
 
-    await emailService.sendVerificationEmail(user.email, user.name, token);
+    try {
+      await emailService.sendVerificationEmail(user.email, user.name, token);
+    } catch (err) {
+      console.error('[signup] Failed to send verification email:', err.message);
+    }
     return user;
   }
 
   async verifyEmail(token) {
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-    const user = await User.findOne({
-      emailVerificationToken: hashedToken,
-      emailVerificationExpire: { $gt: Date.now() },
-    });
-
-    if (!user) {
-      throw new Error('Invalid or expired verification token');
+    if (!token) {
+      throw new Error('Verification token is required');
     }
 
-    user.isEmailVerified = true;
-    user.emailVerificationToken = undefined;
-    user.emailVerificationExpire = undefined;
+    try {
+      const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+      const user = await User.findOne({
+        emailVerificationToken: hashedToken,
+        emailVerificationExpire: { $gt: Date.now() },
+      });
+
+      if (!user) {
+        throw new Error('Invalid or expired verification token. If your email is already verified, you can log in directly.');
+      }
+
+      user.isEmailVerified = true;
+      user.emailVerificationToken = undefined;
+      user.emailVerificationExpire = undefined;
+      await user.save();
+
+      try {
+        await emailService.sendWelcomeEmail(user.email, user.name);
+      } catch (err) {
+        console.error('[verifyEmail] Failed to send welcome email:', err.message);
+      }
+
+      const accessToken = this.generateAccessToken(user);
+      const refreshToken = await this.generateRefreshToken(user);
+
+      return { user, accessToken, refreshToken };
+    } catch (error) {
+      console.error('[verifyEmail Error]:', error.message);
+      throw error;
+    }
+  }
+
+  async resendVerificationEmail(email) {
+    if (!email) {
+      throw new Error('Email address is required');
+    }
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw new Error('User with this email does not exist');
+    }
+    if (user.isEmailVerified) {
+      throw new Error('Your email is already verified. You can log in.');
+    }
+
+    const { token, hashedToken } = this.generateRandomToken();
+    user.emailVerificationToken = hashedToken;
+    user.emailVerificationExpire = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
     await user.save();
 
-    await emailService.sendWelcomeEmail(user.email, user.name);
+    await emailService.sendVerificationEmail(user.email, user.name, token);
+    return true;
+  }
+
+  async updateProfile(userId, { name, phone }) {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (name !== undefined && name.trim()) {
+      user.name = name.trim();
+    }
+    if (phone !== undefined) {
+      user.phone = phone.trim();
+    }
+
+    await user.save();
     return user;
   }
 
@@ -100,7 +160,9 @@ class AuthService {
     }
 
     if (!user.isEmailVerified) {
-      throw new Error('Please verify your email before logging in');
+      const err = new Error('Please verify your email before logging in');
+      err.isUnverified = true;
+      throw err;
     }
 
     const accessToken = this.generateAccessToken(user);
@@ -120,30 +182,30 @@ class AuthService {
     let user = await User.findOne({ email });
 
     if (user) {
-      // If user exists but is not verified, and this isn't a google account yet, reject auto-link
-      if (!user.isEmailVerified && !user.googleId) {
-        throw new Error('Account exists but email is not verified. Please verify your email first.');
-      }
-      
       // Link Google account if not linked
       if (!user.googleId) {
         user.googleId = googleId;
-        if (!user.profileImage || user.profileImage.includes('ui-avatars')) {
-          user.profileImage = picture;
-        }
-        await user.save();
       }
+      user.isEmailVerified = true;
+      if (!user.profileImage || user.profileImage.includes('ui-avatars')) {
+        user.profileImage = picture;
+      }
+      await user.save();
     } else {
       // Create new user
       user = await User.create({
-        name,
+        name: name || 'User',
         email,
         googleId,
         profileImage: picture,
-        isEmailVerified: email_verified, // Google verified
+        isEmailVerified: email_verified !== false, // Google verified
       });
-      if (email_verified) {
-        await emailService.sendWelcomeEmail(user.email, user.name);
+      if (user.isEmailVerified) {
+        try {
+          await emailService.sendWelcomeEmail(user.email, user.name);
+        } catch (err) {
+          console.error('[googleAuth] Failed to send welcome email:', err.message);
+        }
       }
     }
 
@@ -199,7 +261,6 @@ class AuthService {
     }
 
     const accessToken = this.generateAccessToken(rToken.user);
-    // Optionally rotate refresh token here, but keeping it simple as per original design.
     return { accessToken, user: rToken.user };
   }
 

@@ -37,6 +37,27 @@ export const authService = {
     return res.json();
   },
 
+  async resendVerification(email: string) {
+    const res = await fetch(`${API_URL}/resend-verification`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    return res.json();
+  },
+
+  async updateProfile(data: { name?: string; phone?: string }, token: string) {
+    const res = await fetch(`${API_URL}/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    return res.json();
+  },
+
   async forgotPassword(email: string) {
     const res = await fetch(`${API_URL}/forgot-password`, {
       method: 'POST',

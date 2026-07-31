@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Input } from '../atoms/Input';
 import { Button } from '../atoms/Button';
 import { fetchPublicCategories, type Category } from '../../services/publicCategoryService';
-
-const LOGO_URL =
-  'https://res.cloudinary.com/gc1qeznc/image/upload/v1784531072/logo_ellestyle_ierdp3.jpg';
 
 export const Footer: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -17,125 +13,111 @@ export const Footer: React.FC = () => {
   }, []);
 
   return (
-    <footer className="pt-20 pb-10 px-8 md:px-16 rounded-[3rem] md:rounded-[4rem] mx-2 md:mx-4 mb-4 shadow-sm" style={{ backgroundColor: 'white' }}>
-      <div className="max-w-7xl mx-auto">
+    <footer className="py-12 px-4 md:px-6 bg-[var(--bg-page)] mt-12 border-t border-[var(--border)]">
+      <div className="container mx-auto max-w-7xl">
+        <div className="flex flex-col md:flex-row justify-between gap-8 md:gap-12">
+          {/* Brand Info & Newsletter alternative */}
+          <div className="mb-8 md:mb-0 max-w-md">
+            <Link to="/" className="flex items-center gap-2 mb-4">
+              <h2 className="font-fraunces text-3xl font-bold" style={{ color: 'var(--accent)' }}>ElleStyle India</h2>
+            </Link>
 
-        {/* Top section: Newsletter */}
-        <div className="flex flex-col lg:flex-row items-start justify-between gap-12 pb-16">
-          <div className="max-w-xl">
-            <h2
-              className="font-fraunces font-medium text-3xl md:text-4xl leading-tight mb-3"
-              style={{ color: 'var(--text-primary)' }}
-            >
-              Stay updated with ELLE STYLE
-            </h2>
-            <p className="font-sans text-sm" style={{ color: 'var(--text-secondary)' }}>
-              Login to receive new arrivals, exclusive offers, and product updates.
+            <h1 className="text-[var(--text-secondary)] mt-4 font-sans text-sm">
+              Discover unique, handcrafted items that elevate your personal style.
+            </h1>
+
+            <div className="mt-6">
+              <p className="font-sans font-semibold text-[10px] uppercase tracking-[0.2em] mb-2" style={{ color: 'var(--text-secondary)' }}>
+                STAY UPDATED
+              </p>
+              <a
+                href="mailto:ellestylecom@gmail.com"
+                className="font-sans font-medium text-sm transition-colors duration-200"
+                style={{ color: 'var(--accent)' }}
+              >
+                ellestylecom@gmail.com
+              </a>
+            </div>
+
+            <div className="mt-6">
+              <Button variant="outline" className="w-auto" onClick={() => window.open('https://instagram.com/ellestyle', '_blank')}>
+                Follow us on Instagram
+                <svg className="ml-2 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                </svg>
+              </Button>
+            </div>
+
+            <p className="text-xs mt-8" style={{ color: 'var(--text-secondary)' }}>
+              © {new Date().getFullYear()} ELLE STYLE. All rights reserved.
             </p>
           </div>
 
-          <form className="w-full lg:w-auto flex flex-col sm:flex-row items-center gap-3">
-            <div className="w-full sm:w-[320px]">
-              <Input type="email" placeholder="Enter your email" required className="!bg-[#FDFBF7] !border-none shadow-inner" />
+          {/* Links Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-8 lg:gap-16">
+            <div>
+              <h3 className="font-semibold mb-4 font-fraunces text-lg" style={{ color: 'var(--text-primary)' }}>Shop</h3>
+              <ul className="space-y-3 font-sans text-sm">
+                {categories.slice(0, 5).map((category) => (
+                  <li key={category._id}>
+                    <Link
+                      to={`/shop/${category.slug}`}
+                      className="transition-colors hover:text-[var(--accent)]"
+                      style={{ color: 'var(--text-secondary)' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
+                    >
+                      {category.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <Button variant="primary" type="submit" className="w-full sm:w-auto !px-8">
-              SUBSCRIBE
-            </Button>
-          </form>
+
+            <div>
+              <h3 className="font-semibold mb-4 font-fraunces text-lg" style={{ color: 'var(--text-primary)' }}>Company</h3>
+              <ul className="space-y-3 font-sans text-sm">
+                <li>
+                  <Link to="/about" className="transition-colors hover:text-[var(--accent)]" style={{ color: 'var(--text-secondary)' }} onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent)')} onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}>About Us</Link>
+                </li>
+                <li>
+                  <Link to="/contact" className="transition-colors hover:text-[var(--accent)]" style={{ color: 'var(--text-secondary)' }} onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent)')} onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}>Contact</Link>
+                </li>
+                <li>
+                  <Link to="/faq" className="transition-colors hover:text-[var(--accent)]" style={{ color: 'var(--text-secondary)' }} onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent)')} onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}>FAQ</Link>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-4 font-fraunces text-lg" style={{ color: 'var(--text-primary)' }}>Legal</h3>
+              <ul className="space-y-3 font-sans text-sm">
+                <li>
+                  <Link to="/privacy-policy" className="transition-colors hover:text-[var(--accent)]" style={{ color: 'var(--text-secondary)' }} onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent)')} onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}>Privacy Policy</Link>
+                </li>
+                <li>
+                  <Link to="/tos" className="transition-colors hover:text-[var(--accent)]" style={{ color: 'var(--text-secondary)' }} onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent)')} onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}>Terms of Service</Link>
+                </li>
+                <li>
+                  <Link to="/shipping" className="transition-colors hover:text-[var(--accent)]" style={{ color: 'var(--text-secondary)' }} onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent)')} onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}>Shipping & Returns</Link>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
 
-        <div className="w-full h-px" style={{ backgroundColor: 'var(--border)' }} />
-
-        {/* Middle section: Large Text Logo */}
-        <div className="py-20 md:py-32 flex justify-center items-center">
-          <h1 
-            className="font-fraunces font-medium text-6xl sm:text-8xl md:text-[140px] lg:text-[180px] leading-none tracking-tight whitespace-nowrap text-center"
-            style={{ color: 'var(--text-primary)' }}
+        {/* Giant Text Logo */}
+        <div className="w-full flex mt-12 lg:mt-24 items-center justify-center overflow-hidden">
+          <h1
+            className="text-center text-5xl sm:text-7xl md:text-[7rem] lg:text-[10rem] font-fraunces font-bold select-none leading-none tracking-tight whitespace-nowrap"
+            style={{ color: 'var(--accent)' }}
           >
-            ELLE STYLE
+            ELLE STYLE  <span className="text-3xl sm:text-5xl md:text-[4rem] lg:text-[6rem]">_INDIA</span>
           </h1>
         </div>
 
-        <div className="w-full h-px mb-12" style={{ backgroundColor: 'var(--border)' }} />
-
-        {/* Bottom section: Links & Social */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-12">
-          <div>
-            <p
-              className="font-sans font-semibold text-[10px] uppercase tracking-[0.2em] mb-2"
-              style={{ color: 'var(--text-secondary)' }}
-            >
-              EMAIL
-            </p>
-            <a
-              href="mailto:ellestylecom@gmail.com"
-              className="font-sans font-medium text-sm transition-colors duration-200"
-              style={{ color: 'var(--text-primary)' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent)')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
-            >
-              ellestylecom@gmail.com
-            </a>
-          </div>
-
-          <div className="flex flex-col items-center gap-3 w-full md:w-auto">
-            <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-              {categories.slice(0, 5).map((category) => (
-                <Link
-                  key={category._id}
-                  to={`/shop/${category.slug}`}
-                  className="font-sans text-xs transition-colors duration-200"
-                  style={{ color: 'var(--text-primary)' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
-                >
-                  {category.name}
-                </Link>
-              ))}
-            </nav>
-            <nav className="flex items-center justify-center gap-6">
-              <a href="#" className="font-sans text-xs transition-colors duration-200" style={{ color: 'var(--text-secondary)' }} onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}>
-                Privacy Policy
-              </a>
-              <a href="#" className="font-sans text-xs transition-colors duration-200" style={{ color: 'var(--text-secondary)' }} onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}>
-                Contact Us
-              </a>
-            </nav>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* Instagram */}
-            <a
-              href="#"
-              aria-label="ElleStyle on Instagram"
-              className="w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-200 hover:bg-gray-50"
-              style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-              </svg>
-            </a>
-            {/* Facebook */}
-            <a
-              href="#"
-              aria-label="ElleStyle on Facebook"
-              className="w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-200 hover:bg-gray-50"
-              style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-              </svg>
-            </a>
-          </div>
-        </div>
-
-        <div className="text-center pt-16">
-          <p className="font-sans text-xs" style={{ color: 'var(--text-secondary)' }}>
-            © 2026 ELLE STYLE. All rights reserved.
-          </p>
-        </div>
       </div>
     </footer>
   );

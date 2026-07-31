@@ -22,7 +22,7 @@ export const CartItemList: React.FC<CartItemListProps> = ({ items, onRemove, onU
     <div className="flex flex-col w-full">
       <div className="hidden md:block w-full h-px bg-black/20 mb-8" />
       
-      {items.map((item, index) => (
+      {items.map((item) => (
         <React.Fragment key={item.id}>
           {/* Mobile and Desktop Wrapper */}
           <div className="flex flex-row gap-4 md:gap-12 py-4 md:py-0 md:pb-8 relative border-b md:border-b-0 border-black/10 md:border-transparent">
