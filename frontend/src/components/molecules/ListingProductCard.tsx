@@ -68,7 +68,7 @@ export const ListingProductCard: React.FC<ListingProductCardProps> = ({
         <div className="absolute top-4 right-4 z-10">
           <button
             onClick={handleFavorite}
-            data-cursor="hidden"
+            data-cursor="pointer"
             aria-label={isFavorite ? `Remove ${title} from saved` : `Save ${title}`}
             className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm transition-transform duration-200 hover:scale-110"
           >

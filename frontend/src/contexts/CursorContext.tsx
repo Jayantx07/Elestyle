@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, type ReactNode } from 'react';
 
-type CursorType = 'default' | 'next' | 'prev' | 'explore' | 'hidden';
+type CursorType = 'default' | 'next' | 'prev' | 'explore' | 'hidden' | 'pointer';
 
 interface CursorContextProps {
   cursorType: CursorType;

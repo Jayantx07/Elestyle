@@ -19,6 +19,7 @@ const adminCouponRoutes = require('../adminCouponRoutes');
 const adminAnalyticsRoutes = require('../adminAnalyticsRoutes');
 const adminSettingsRoutes = require('../adminSettingsRoutes');
 const authRoutes = require('../authRoutes');
+const cartRoutes = require('../cartRoutes');
 
 router.use('/auth', authRoutes);
 router.use('/upload', uploadRoutes);
@@ -26,6 +27,7 @@ router.use('/products', require('../productRoutes'));
 router.use('/categories', require('../categoryRoutes'));
 router.use('/reviews', reviewStandaloneRoutes);
 router.use('/checkout', checkoutRoutes);
+router.use('/cart', cartRoutes);
 router.use('/admin/dashboard', adminDashboardRoutes);
 router.use('/admin/products', adminProductRoutes);
 router.use('/admin/categories', adminCategoryRoutes);

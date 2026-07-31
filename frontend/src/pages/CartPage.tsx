@@ -1,67 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { CartItemList, type CartItem } from '../components/organisms/CartItemList';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { CartItemList } from '../components/organisms/CartItemList';
 import { CartSummary } from '../components/organisms/CartSummary';
 import { Typography } from '../components/atoms/Typography';
-
-const DUMMY_CART_ITEMS: CartItem[] = [
-  {
-    id: '1',
-    title: 'BOMBER JACKET',
-    originalPrice: 2728,
-    price: 2318,
-    color: { name: 'Black', hex: '#000000' },
-    size: '46',
-    quantity: 2,
-    imageSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527415/macrame_bags_waokfv.jpg' // Using available dummy image
-  },
-  {
-    id: '2',
-    title: 'TAILORED JACKET',
-    price: 2728,
-    color: { name: 'Gray', hex: '#808080' },
-    size: '46',
-    quantity: 2,
-    imageSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527414/handmade_candles_cover_chs6qs.jpg'
-  },
-  {
-    id: '3',
-    title: 'COAT',
-    price: 649,
-    color: { name: 'Gray', hex: '#E5E5E5' },
-    size: '46',
-    quantity: 2,
-    imageSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527414/wedding_giveaways_aabxvh.jpg'
-  },
-  {
-    id: '4',
-    title: 'HIGH-NECK SWEATER',
-    price: 600,
-    color: { name: 'Cream', hex: '#FDFBF7' },
-    size: '46',
-    quantity: 1,
-    imageSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527414/handmade_earrings_o0cb8h.jpg'
-  }
-];
+import { useCart } from '../contexts/CartContext';
 
 const CartPage: React.FC = () => {
-  const [items, setItems] = useState<CartItem[]>(DUMMY_CART_ITEMS);
+  const { items, removeFromCart, updateQuantity } = useCart();
+  const navigate = useNavigate();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 
   const handleRemove = (id: string) => {
-    setItems(items.filter(item => item.id !== id));
+    removeFromCart(id);
   };
 
   const handleUpdateQuantity = (id: string, newQuantity: number) => {
-    setItems(items.map(item => 
-      item.id === id ? { ...item, quantity: newQuantity } : item
-    ));
+    updateQuantity(id, newQuantity);
   };
 
   const handleCheckout = () => {
-    alert('Proceeding to checkout with ' + items.length + ' items!');
+    navigate('/checkout');
   };
 
   return (
@@ -82,7 +43,11 @@ const CartPage: React.FC = () => {
             {/* Left: Cart Items */}
             <div className="lg:col-span-7 xl:col-span-8">
               <CartItemList 
-                items={items} 
+                items={items.map(item => ({
+                  ...item,
+                  color: { name: 'Default', hex: '#000000' }, // Mocking required fields
+                  size: 'OS'
+                }))} 
                 onRemove={handleRemove} 
                 onUpdateQuantity={handleUpdateQuantity} 
               />

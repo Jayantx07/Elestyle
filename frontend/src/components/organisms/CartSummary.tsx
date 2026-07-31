@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '../atoms/Button';
-import type { CartItem } from './CartItemList';
+import type { CartItem } from '../../contexts/CartContext';
 
 export interface CartSummaryProps {
   items: CartItem[];

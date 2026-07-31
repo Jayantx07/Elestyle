@@ -86,8 +86,6 @@ export const Cursor: React.FC<CursorProps> = ({ size = 20}) => {
     document.documentElement.addEventListener("mouseenter", handleMouseEnter);
     document.documentElement.addEventListener("mouseleave", handleMouseLeave);
 
-    document.body.style.cursor = "none"; // hide native cursor
-
     requestRef.current = requestAnimationFrame(animate);
 
     return () => {
@@ -96,12 +94,23 @@ export const Cursor: React.FC<CursorProps> = ({ size = 20}) => {
       document.documentElement.removeEventListener("mouseenter", handleMouseEnter);
       document.documentElement.removeEventListener("mouseleave", handleMouseLeave);
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
-      document.body.style.cursor = "auto"; // restore native cursor
     };
   }, [setCursorState, resetCursor]);
 
-  const isHovering = cursorType !== 'default' && cursorType !== 'hidden';
-  const isHidden = cursorType === 'hidden';
+  useEffect(() => {
+    if (cursorType === 'pointer') {
+      document.body.style.cursor = 'pointer';
+    } else {
+      document.body.style.cursor = 'none';
+    }
+    
+    return () => {
+      document.body.style.cursor = 'auto';
+    };
+  }, [cursorType]);
+
+  const isHovering = cursorType !== 'default' && cursorType !== 'hidden' && cursorType !== 'pointer';
+  const isHidden = cursorType === 'hidden' || cursorType === 'pointer';
   const currentSize = isHovering ? 70 : size;
 
   return (

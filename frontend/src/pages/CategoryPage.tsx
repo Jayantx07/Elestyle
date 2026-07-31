@@ -3,10 +3,11 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { fetchPublicCategories, type Category } from '../services/publicCategoryService';
 import { publicProductService, type PublicProduct } from '../services/publicProductService';
 import { CircularCategoryCarousel } from '../components/organisms/CircularCategoryCarousel';
+import { useWishlist } from '../contexts/WishlistContext';
 
 // Icons
-const HeartIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+const HeartIcon = ({ isFavorite }: { isFavorite?: boolean }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill={isFavorite ? "currentColor" : "none"} xmlns="http://www.w3.org/2000/svg">
     <path d="M12.62 20.81C12.28 20.93 11.72 20.93 11.38 20.81C8.48 19.82 2 15.69 2 8.68998C2 5.59998 4.49 3.09998 7.56 3.09998C9.38 3.09998 10.99 3.97998 12 5.33998C13.01 3.97998 14.63 3.09998 16.44 3.09998C19.51 3.09998 22 5.59998 22 8.68998C22 15.69 15.52 19.82 12.62 20.81Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
@@ -27,6 +28,8 @@ const CategoryPage: React.FC = () => {
   const [category, setCategory] = useState<Category | null>(null);
   const [products, setProducts] = useState<PublicProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   
   // Array to hold multiple selected subcategories for the checkboxes
   const [selectedSubCategories, setSelectedSubCategories] = useState<string[]>([]);
@@ -204,6 +207,8 @@ const CategoryPage: React.FC = () => {
                     <div 
                       className="relative aspect-[4/5] mb-4 overflow-hidden rounded-md flex items-center justify-center p-4 transition-all duration-300 group-hover:shadow-md bg-[#f8f6f3] cursor-pointer"
                       onClick={() => navigate(`/product/${product.slug}`)}
+                      data-cursor="explore"
+                      data-cursor-text="VIEW"
                     >
                       <img
                         src={imageSrc}
@@ -215,13 +220,24 @@ const CategoryPage: React.FC = () => {
                       {/* Wishlist Button Overlay */}
                       <button 
                         className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-sm hover:bg-gray-50 transition-colors opacity-100 group-hover:opacity-100 md:opacity-0"
-                        style={{ color: 'var(--text-secondary)' }}
+                        style={{ color: isInWishlist(product.slug) ? 'var(--accent)' : 'var(--text-secondary)' }}
+                        data-cursor="pointer"
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
-                          // Wishlist toggle logic would go here
+                          if (isInWishlist(product.slug)) {
+                            removeFromWishlist(product.slug);
+                          } else {
+                            addToWishlist({
+                              id: product.slug,
+                              title: product.name,
+                              price: product.price,
+                              imageSrc: imageSrc,
+                            });
+                          }
                         }}
                       >
-                        <HeartIcon />
+                        <HeartIcon isFavorite={isInWishlist(product.slug)} />
                       </button>
                     </div>
                     

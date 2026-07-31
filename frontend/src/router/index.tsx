@@ -5,6 +5,7 @@ import Home from '@/pages/Home';
 import ProductPage from '@/pages/ProductPage';
 import CartPage from '@/pages/CartPage';
 import ProfilePage from '@/pages/ProfilePage';
+import WishlistPage from '@/pages/WishlistPage';
 
 import CategoryPage from '@/pages/CategoryPage';
 import SearchPage from '@/pages/SearchPage';
@@ -59,6 +60,10 @@ export const router = createBrowserRouter([
       {
         path: 'cart',
         element: <CartPage />,
+      },
+      {
+        path: 'wishlist',
+        element: <WishlistPage />,
       },
       {
         element: <ProtectedRoute />,
