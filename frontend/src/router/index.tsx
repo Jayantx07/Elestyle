@@ -10,6 +10,7 @@ import WishlistPage from '@/pages/WishlistPage';
 import CategoryPage from '@/pages/CategoryPage';
 import SearchPage from '@/pages/SearchPage';
 import AboutPage from '@/pages/AboutPage';
+import ContactPage from '@/pages/ContactPage';
 import CheckoutPage from '@/pages/CheckoutPage';
 
 // Auth Imports
@@ -105,6 +106,10 @@ export const router = createBrowserRouter([
       {
         path: 'about',
         element: <AboutPage />,
+      },
+      {
+        path: 'contact',
+        element: <ContactPage />,
       },
       // Additional routes will be added here
     ],

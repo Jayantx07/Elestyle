@@ -1,49 +1,83 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion, useMotionValueEvent, useScroll } from 'motion/react';
+import { IconMenu2, IconX } from '@tabler/icons-react';
 import { useSearch } from '../../hooks/useSearch';
 import { LiveSearch } from './LiveSearch';
 import { IntentResolver } from '../../lib/search/resolver/IntentResolver';
-import { fetchPublicCategories } from '../../services/publicCategoryService';
 import { useCart } from '../../contexts/CartContext';
 import { useWishlist } from '../../contexts/WishlistContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { cn } from '@/lib/utils';
 
 const LOGO_URL =
   'https://res.cloudinary.com/gc1qeznc/image/upload/v1784531072/logo_ellestyle_ierdp3.jpg';
 
-// Dynamic navigation links are fetched from the API
+type CategoryGroup = {
+  label: string;
+  href: string;
+  subcategories?: { label: string; href: string }[];
+};
+
+const MAIN_NAV_LINKS = [
+  { label: 'Home', href: '/' },
+  { label: 'About Us', href: '/about' },
+  { label: 'Contact Us', href: '/contact' },
+];
+
+const CATEGORY_GROUPS: CategoryGroup[] = [
+  {
+    label: 'Royal Rajasthani Living',
+    href: '/shop/royal-rajasthani-living',
+    subcategories: [
+      { label: 'Handcrafted cushion covers', href: '/shop/handcrafted-cushion-covers' },
+      { label: 'Round table mats', href: '/shop/round-table-mats' },
+      { label: 'Patchwork runners', href: '/shop/patchwork-runners' },
+      { label: 'Patchwork runners & mat set', href: '/shop/patchwork-runners-and-mat-set' },
+    ],
+  },
+  {
+    label: 'Bag Collection',
+    href: '/shop/bag-collection',
+    subcategories: [
+      { label: 'Handcrafted Banjara Boko bags', href: '/shop/handcrafted-banjara-boko-bags' },
+      { label: 'Handcrafted Banjara Zari bag', href: '/shop/handcrafted-banjara-zari-bag' },
+      { label: 'Ethnic patchwork colorful clutch bags', href: '/shop/ethnic-patchwork-colorful-clutch-bags' },
+      { label: 'Matka Banjara bags', href: '/shop/matka-banjara-bags' },
+      { label: 'Macrame bags', href: '/shop/macrame-bags' },
+    ],
+  },
+  {
+    label: 'Jewelry Collection',
+    href: '/shop/jewelry-collection',
+    subcategories: [
+      { label: 'Handmade earrings', href: '/shop/handmade-earrings' },
+      { label: 'Rajasthani earrings', href: '/shop/rajasthani-earrings' },
+      { label: 'Floral thread jewelry', href: '/shop/floral-thread-jewelry' },
+    ],
+  },
+  {
+    label: 'Artisans Candles',
+    href: '/shop/artisans-candles',
+  },
+  {
+    label: 'Wedding Collections',
+    href: '/shop/wedding-collections',
+  },
+];
 
 export const Navbar: React.FC = () => {
-  const [navLinks, setNavLinks] = useState<{label: string, href: string}[]>([]);
   const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const loadCategories = () => {
-      fetchPublicCategories({ navbar: true }).then((cats) => {
-        setNavLinks(cats.map(c => ({ label: c.name, href: `/shop/${c.slug}` })));
-      });
-    };
-    
-    // Initial load
-    loadCategories();
-
-    // Listen for cross-tab or cross-component updates
-    const channel = new BroadcastChannel('category_updates');
-    channel.onmessage = (event) => {
-      if (event.data === 'updated') {
-        loadCategories();
-      }
-    };
-
-    return () => {
-      channel.close();
-    };
-  }, []);
+  const [isNavbarHovered, setIsNavbarHovered] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
+
+  const headerRef = useRef<HTMLDivElement>(null);
+  const shellRef = useRef<HTMLDivElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const categoriesPanelRef = useRef<HTMLDivElement>(null);
   
   const { itemCount: cartItemCount } = useCart();
   const { itemCount: wishlistItemCount } = useWishlist();
@@ -51,6 +85,12 @@ export const Navbar: React.FC = () => {
   
   const location = useLocation();
   const navigate = useNavigate();
+
+  const { scrollY } = useScroll({ target: shellRef, offset: ['start start', 'end start'] });
+
+  useMotionValueEvent(scrollY, 'change', (latest) => {
+    setIsScrolled(latest > 20);
+  });
 
   const { query, isSearching, result, handleQueryChange, clearSearch } = useSearch();
 
@@ -60,6 +100,34 @@ export const Navbar: React.FC = () => {
       searchInputRef.current.focus();
     }
   }, [isSearchOpen]);
+
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+
+      if (categoriesPanelRef.current && !categoriesPanelRef.current.contains(target)) {
+        setIsCategoriesOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsCategoriesOpen(false);
+        setIsSearchOpen(false);
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, []);
 
   // Handle enter key for search
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -80,17 +148,34 @@ export const Navbar: React.FC = () => {
   // Close menu on route change
   useEffect(() => {
     setMenuOpen(false);
+    setIsCategoriesOpen(false);
+    setIsSearchOpen(false);
   }, [location.pathname]);
 
+  const isShopSectionActive = location.pathname.startsWith('/shop/');
+
   return (
-    <header className="fixed left-0 right-0 top-6 z-50 pointer-events-none">
-      <div className="mx-auto max-w-[1200px] px-4 md:px-6">
-        <div
-          className={`pointer-events-auto h-[64px] md:h-[70px] flex items-center justify-between px-4 sm:px-6 md:px-8 rounded-full transition-all duration-300 border border-gray-100 ${
-            isScrolled ? 'bg-white/95 backdrop-blur-md shadow-md' : 'bg-white shadow-sm'
-          }`}
+    <header ref={headerRef} className="fixed left-0 right-0 top-6 z-50 pointer-events-none">
+      <div
+        ref={shellRef}
+        className="mx-auto relative max-w-[1180px] px-3 transition-[max-width,padding] duration-300 md:max-w-[1220px] md:px-4 lg:hover:max-w-[1260px] lg:hover:px-5"
+      >
+        <motion.div
+          animate={{
+            backgroundColor: isScrolled || isNavbarHovered ? 'rgba(255,255,255,0.98)' : 'rgba(255,255,255,1)',
+            boxShadow: isScrolled || isNavbarHovered
+              ? '0 12px 30px rgba(27,42,46,0.08)'
+              : '0 4px 14px rgba(27,42,46,0.04)',
+            paddingLeft: isNavbarHovered ? 36 : 28,
+            paddingRight: isNavbarHovered ? 36 : 28,
+            height: isNavbarHovered ? 72 : 64,
+          }}
+          transition={{ type: 'spring', stiffness: 220, damping: 28 }}
+          onMouseEnter={() => setIsNavbarHovered(true)}
+          onMouseLeave={() => setIsNavbarHovered(false)}
+          className={cn('pointer-events-auto flex items-center justify-between rounded-full border border-gray-100 backdrop-blur-md sm:px-6 md:h-[66px] md:px-8')}
         >
-        {/* Logo */}
+          {/* Logo */}
           <Link to="/" className="flex items-center flex-shrink-0" aria-label="ElleStyle — Home">
             <img
               src={LOGO_URL}
@@ -100,160 +185,237 @@ export const Navbar: React.FC = () => {
             />
           </Link>
 
-        {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center justify-center flex-1 mx-8" aria-label="Main navigation">
-            <ul className="flex items-center gap-6 xl:gap-8">
-              {navLinks.map((link) => (
-                <li key={link.label}>
-                  <NavLink
-                    to={link.href}
-                    className={({ isActive }) =>
-                      `font-sans text-[14px] ${isActive ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'} transition-all duration-200 hover:text-gray-900`
-                    }
-                  >
-                    <span>
-                      {link.label}
-                    </span>
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-        {/* Right icons */}
-          <div className="flex items-center gap-1 sm:gap-2 md:gap-4 ml-auto">
-          {/* Search */}
-          <div className="relative flex items-center" ref={searchContainerRef}>
-            {isSearchOpen ? (
-              <div className="flex items-center bg-gray-100 rounded-full px-3 py-1.5 md:py-2 transition-all w-[200px] sm:w-[250px] md:w-[300px]">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 mr-2 flex-shrink-0">
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder="Search products..."
-                  value={query}
-                  onChange={(e) => handleQueryChange(e.target.value)}
-                  onKeyDown={handleSearchKeyDown}
-                  className="bg-transparent border-none outline-none w-full text-sm text-gray-900 placeholder-gray-500"
-                />
-                <button onClick={() => { setIsSearchOpen(false); clearSearch(); }} className="text-gray-400 hover:text-gray-600 ml-2 flex-shrink-0">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </button>
-              </div>
-            ) : (
-              <button
-                aria-label="Search"
-                className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center hover:bg-gray-100 transition-transform duration-150"
-                style={{ color: 'var(--text-primary)', transformOrigin: 'center' }}
-                onClick={() => setIsSearchOpen(true)}
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex flex-1 justify-center px-8">
+            <nav className="flex items-center gap-5 xl:gap-7" aria-label="Main navigation">
+              <NavLink
+                to="/"
+                end
+                className={({ isActive }) =>
+                  `font-sans text-[14px] transition-colors duration-200 ${isActive ? 'font-semibold text-gray-900' : 'font-medium text-gray-700 hover:text-gray-900'}`
+                }
               >
-                <svg width="20" height="20" className="md:w-[22px] md:h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
+                Home
+              </NavLink>
+
+              <button
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded={isCategoriesOpen}
+                onClick={() => setIsCategoriesOpen((open) => !open)}
+                onMouseEnter={() => setIsCategoriesOpen(true)}
+                className={`font-sans text-[14px] transition-colors duration-200 ${isCategoriesOpen || isShopSectionActive ? 'font-semibold text-black' : 'font-medium text-black hover:text-gray-800'}`}
+              >
+                Categories
               </button>
-            )}
-            
-            {/* Live Search Dropdown */}
-            {isSearchOpen && (
-              <LiveSearch
-                query={query}
-                isSearching={isSearching}
-                result={result}
-                onClose={() => setIsSearchOpen(false)}
-                onSelectResult={() => { setIsSearchOpen(false); clearSearch(); }}
-              />
-            )}
+
+              <NavLink
+                to="/about"
+                className={({ isActive }) =>
+                  `font-sans text-[14px] transition-colors duration-200 ${isActive ? 'font-semibold text-gray-900' : 'font-medium text-gray-700 hover:text-gray-900'}`
+                }
+              >
+                About Us
+              </NavLink>
+
+              <NavLink
+                to="/contact"
+                className={({ isActive }) =>
+                  `font-sans text-[14px] transition-colors duration-200 ${isActive ? 'font-semibold text-gray-900' : 'font-medium text-gray-700 hover:text-gray-900'}`
+                }
+              >
+                Contact Us
+              </NavLink>
+            </nav>
+
+            <AnimatePresence>
+              {isCategoriesOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.99 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.99 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  className="absolute left-1/2 top-[calc(100%+12px)] z-50 w-[min(90vw,1440px)] -translate-x-1/2 rounded-[30px] border border-[var(--border)] bg-white px-8 py-8 shadow-[0_24px_60px_rgba(27,42,46,0.12)] lg:px-10 lg:py-10"
+                  onMouseEnter={() => setIsCategoriesOpen(true)}
+                  onMouseLeave={() => setIsCategoriesOpen(false)}
+                >
+                  <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2 xl:grid-cols-5 xl:gap-x-12">
+                    {CATEGORY_GROUPS.map((group) => (
+                      <div key={group.label} className="min-w-0 space-y-4">
+                        <NavLink
+                          to={group.href}
+                          className={({ isActive }) =>
+                            `block text-[13px] font-semibold uppercase tracking-[0.16em] transition-colors duration-200 ${isActive ? 'text-[#03989E]' : 'text-[#03989E] hover:text-[#027a7e]'}`
+                          }
+                          onClick={() => setIsCategoriesOpen(false)}
+                        >
+                          {group.label}
+                        </NavLink>
+
+                        {group.subcategories && group.subcategories.length > 0 ? (
+                          <ul className="space-y-3 border-l border-[var(--border)] pl-4">
+                            {group.subcategories.map((subcategory) => (
+                              <li key={subcategory.label}>
+                                <Link
+                                  to={subcategory.href}
+                                  onClick={() => setIsCategoriesOpen(false)}
+                                  className="block text-sm leading-7 text-[var(--text-secondary)] transition-colors duration-200 hover:text-[var(--accent)]"
+                                >
+                                  {subcategory.label}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <Link
+                            to={group.href}
+                            onClick={() => setIsCategoriesOpen(false)}
+                            className="inline-flex items-center rounded-full border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--text-secondary)] transition-colors duration-200 hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                          >
+                            View collection
+                          </Link>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
-          {/* Cart */}
-          <Link
-            to="/cart"
-            aria-label="Shopping bag"
-            className="relative w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center hover:scale-105 transition-transform duration-150"
-            style={{ color: 'var(--text-primary)', transformOrigin: 'center' }}
-          >
-            <svg width="20" height="20" className="md:w-[22px] md:h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <path d="M16 10a4 4 0 0 1-8 0" />
-            </svg>
-            {cartItemCount > 0 && (
-              <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
-                {cartItemCount}
-              </span>
-            )}
-          </Link>
+          {/* Right icons */}
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-4 ml-auto">
+            {/* Search */}
+            <div className="relative flex items-center" ref={searchContainerRef}>
+              {isSearchOpen ? (
+                <div className="flex items-center bg-gray-100 rounded-full px-3 py-1.5 md:py-2 transition-all w-[200px] sm:w-[250px] md:w-[300px]">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 mr-2 flex-shrink-0">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    placeholder="Search products..."
+                    value={query}
+                    onChange={(e) => handleQueryChange(e.target.value)}
+                    onKeyDown={handleSearchKeyDown}
+                    className="bg-transparent border-none outline-none w-full text-sm text-gray-900 placeholder-gray-500"
+                  />
+                  <button onClick={() => { setIsSearchOpen(false); clearSearch(); }} className="text-gray-400 hover:text-gray-600 ml-2 flex-shrink-0">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  aria-label="Search"
+                  className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center hover:bg-gray-100 transition-transform duration-150"
+                  style={{ color: 'var(--text-primary)', transformOrigin: 'center' }}
+                  onClick={() => setIsSearchOpen(true)}
+                >
+                  <svg width="20" height="20" className="md:w-[22px] md:h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                </button>
+              )}
 
-          {/* Wishlist */}
-          <Link
-            to="/wishlist"
-            aria-label="Wishlist"
-            className="relative w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center hover:scale-105 transition-transform duration-150"
-            style={{ color: 'var(--text-primary)', transformOrigin: 'center' }}
-          >
-            <svg width="20" height="20" className="md:w-[22px] md:h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-            </svg>
-            {wishlistItemCount > 0 && (
-              <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
-                {wishlistItemCount}
-              </span>
-            )}
-          </Link>
+              {/* Live Search Dropdown */}
+              {isSearchOpen && (
+                <LiveSearch
+                  query={query}
+                  isSearching={isSearching}
+                  result={result}
+                  onClose={() => setIsSearchOpen(false)}
+                  onSelectResult={() => { setIsSearchOpen(false); clearSearch(); }}
+                />
+              )}
+            </div>
 
-          {/* Account */}
-          <Link
-            to={user ? "/profile" : "/login"}
-            aria-label={user ? `Profile (${user.name})` : "Sign In"}
-            title={user ? user.name : "Sign In"}
-            className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center overflow-hidden border border-gray-200 hover:scale-105 transition-transform duration-150"
-            style={{ color: 'var(--text-primary)', transformOrigin: 'center' }}
-          >
-            {user ? (
-              <img
-                src={user.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`}
-                alt={user.name}
-                className="w-full h-full object-cover rounded-full"
-              />
-            ) : (
+            {/* Cart */}
+            <Link
+              to="/cart"
+              aria-label="Shopping bag"
+              className="relative w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center hover:scale-105 transition-transform duration-150"
+              style={{ color: 'var(--text-primary)', transformOrigin: 'center' }}
+            >
               <svg width="20" height="20" className="md:w-[22px] md:h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-            )}
-          </Link>
-
-          {/* Mobile hamburger */}
-          <button
-            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-            aria-expanded={menuOpen}
-            className="lg:hidden w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-transform duration-150"
-            style={{ color: 'var(--text-primary)', transformOrigin: 'center' }}
-            onClick={() => setMenuOpen((prev) => !prev)}
-          >
-            {menuOpen ? (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            ) : (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="3" y1="12" x2="21" y2="12" />
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
                 <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="18" x2="21" y2="18" />
+                <path d="M16 10a4 4 0 0 1-8 0" />
               </svg>
-            )}
-          </button>
-        </div>
+              {cartItemCount > 0 && (
+                <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+                  {cartItemCount}
+                </span>
+              )}
+            </Link>
+
+            {/* Wishlist */}
+            <Link
+              to="/wishlist"
+              aria-label="Wishlist"
+              className="relative w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center hover:scale-105 transition-transform duration-150"
+              style={{ color: 'var(--text-primary)', transformOrigin: 'center' }}
+            >
+              <svg width="20" height="20" className="md:w-[22px] md:h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+              {wishlistItemCount > 0 && (
+                <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+                  {wishlistItemCount}
+                </span>
+              )}
+            </Link>
+
+            {/* Account */}
+            <Link
+              to={user ? '/profile' : '/login'}
+              aria-label={user ? `Profile (${user.name})` : 'Sign In'}
+              title={user ? user.name : 'Sign In'}
+              className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center overflow-hidden border border-gray-200 hover:scale-105 transition-transform duration-150"
+              style={{ color: 'var(--text-primary)', transformOrigin: 'center' }}
+            >
+              {user ? (
+                <img
+                  src={user.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`}
+                  alt={user.name}
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                <svg width="20" height="20" className="md:w-[22px] md:h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              )}
+            </Link>
+
+            {/* Mobile hamburger */}
+            <button
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={menuOpen}
+              className="lg:hidden w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-transform duration-150"
+              style={{ color: 'var(--text-primary)', transformOrigin: 'center' }}
+              onClick={() => setMenuOpen((prev) => {
+                const next = !prev;
+                if (!next) {
+                  setIsCategoriesOpen(false);
+                }
+                return next;
+              })}
+            >
+              {menuOpen ? (
+                <IconX size={20} />
+              ) : (
+                <IconMenu2 size={20} />
+              )}
+            </button>
+          </div>
+        </motion.div>
       </div>
-    </div>
 
       {/* Mobile Menu Dropdown */}
       {menuOpen && (
@@ -261,14 +423,75 @@ export const Navbar: React.FC = () => {
           className="lg:hidden max-w-7xl mx-auto mt-2 rounded-2xl overflow-hidden shadow-lg"
           style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--border)', border: '1px solid var(--border)' }}
         >
-          <nav className="flex flex-col py-4" aria-label="Mobile navigation">
-            {navLinks.map((link) => (
+          <nav className="flex flex-col py-3" aria-label="Mobile navigation">
+            <NavLink
+              to="/"
+              end
+              onClick={() => setMenuOpen(false)}
+              className={({ isActive }) =>
+                `px-6 py-4 font-sans text-sm transition-colors duration-200 ${isActive ? 'font-semibold text-[var(--text-primary)] bg-gray-50' : 'font-medium text-[var(--text-secondary)] hover:bg-gray-50 hover:text-[var(--text-primary)]'}`
+              }
+            >
+              Home
+            </NavLink>
+
+            <button
+              type="button"
+              className="flex items-center justify-between px-6 py-4 text-left font-sans text-sm font-medium text-[var(--text-primary)] hover:bg-gray-50"
+              onClick={() => setIsCategoriesOpen((open) => !open)}
+            >
+              <span>Categories</span>
+              <span className="text-xs text-[var(--text-secondary)]">{isCategoriesOpen ? 'Hide' : 'Show'}</span>
+            </button>
+
+            {isCategoriesOpen && (
+              <div className="border-t border-[var(--border)] bg-white px-4 py-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {CATEGORY_GROUPS.map((group) => (
+                    <div key={group.label} className="rounded-2xl border border-[var(--border)] p-4">
+                      <Link
+                        to={group.href}
+                        onClick={() => {
+                          setMenuOpen(false);
+                          setIsCategoriesOpen(false);
+                        }}
+                        className="block text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--text-primary)]"
+                      >
+                        {group.label}
+                      </Link>
+                      {group.subcategories && group.subcategories.length > 0 ? (
+                        <div className="mt-3 space-y-2">
+                          {group.subcategories.map((subcategory) => (
+                            <Link
+                              key={subcategory.label}
+                              to={subcategory.href}
+                              onClick={() => {
+                                setMenuOpen(false);
+                                setIsCategoriesOpen(false);
+                              }}
+                              className="block text-sm leading-6 text-[var(--text-secondary)]"
+                            >
+                              {subcategory.label}
+                            </Link>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">View the full collection.</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {MAIN_NAV_LINKS.map((link) => (
               <NavLink
                 key={link.label}
                 to={link.href}
                 onClick={() => setMenuOpen(false)}
-                className="px-6 py-4 font-sans text-sm font-medium transition-colors duration-200 hover:bg-gray-50"
-                style={{ color: 'var(--text-primary)' }}
+                className={({ isActive }) =>
+                  `px-6 py-4 font-sans text-sm transition-colors duration-200 ${isActive ? 'font-semibold text-[var(--text-primary)] bg-gray-50' : 'font-medium text-[var(--text-secondary)] hover:bg-gray-50 hover:text-[var(--text-primary)]'}`
+                }
               >
                 {link.label}
               </NavLink>
