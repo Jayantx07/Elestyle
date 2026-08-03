@@ -18,6 +18,32 @@ interface ImageUploadProps {
   productSlug?: string;
 }
 
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+function OverlayButton({
+  title,
+  onClick,
+  className,
+  children,
+  disabled = false,
+}: {
+  title: string;
+  onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  className: string;
+  children: React.ReactNode;
+  disabled?: boolean;
+}) {
+  return (
+    <button type="button" onClick={onClick} disabled={disabled} className={className} title={title}>
+      {children}
+    </button>
+  );
+}
+
+function StatusBadge({ className, children }: { className: string; children: React.ReactNode }) {
+  return <div className={className}>{children}</div>;
+}
+
 export function ImageUpload({
   images,
   onChange,
@@ -39,9 +65,7 @@ export function ImageUpload({
   };
 
   const processFiles = (files: FileList | File[]) => {
-    const newFiles = Array.from(files).filter((file) =>
-      ['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
-    );
+    const newFiles = Array.from(files).filter((file) => ACCEPTED_IMAGE_TYPES.includes(file.type));
 
     if (newFiles.length === 0) return;
 
@@ -89,7 +113,6 @@ export function ImageUpload({
       URL.revokeObjectURL(removed.previewUrl);
     }
 
-    // If we removed the featured image, make the first one featured if available
     if (removed.isFeatured && newImages.length > 0) {
       newImages[0].isFeatured = true;
     }
@@ -116,7 +139,6 @@ export function ImageUpload({
     const newImages = [...images];
     const swapIndex = direction === 'left' ? index - 1 : index + 1;
     
-    // Swap
     [newImages[index], newImages[swapIndex]] = [newImages[swapIndex], newImages[index]];
     
     onChange(newImages);
@@ -124,7 +146,6 @@ export function ImageUpload({
 
   return (
     <div className="w-full">
-      {/* Upload Area */}
       <div
         className={`relative flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
           isDragging
@@ -153,7 +174,6 @@ export function ImageUpload({
         />
       </div>
 
-      {/* Image Grid */}
       {images.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-6">
           {images.map((img, index) => (
@@ -169,69 +189,70 @@ export function ImageUpload({
                 className="w-full h-32 object-cover"
               />
               
-              {/* Overlay Actions */}
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
                 <div className="flex justify-between">
-                  {/* Featured Toggle */}
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); setFeatured(index); }}
-                    className={`p-1.5 rounded-full backdrop-blur-sm transition-colors ${
-                      img.isFeatured 
-                        ? 'bg-primary text-white' 
-                        : 'bg-white/20 text-white hover:bg-white/40'
-                    }`}
+                  <OverlayButton
                     title="Set as Featured Image"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFeatured(index);
+                    }}
+                    className={`p-1.5 rounded-full backdrop-blur-sm transition-colors ${
+                      img.isFeatured ? 'bg-primary text-white' : 'bg-white/20 text-white hover:bg-white/40'
+                    }`}
                   >
-                    <Star className="w-4 h-4" fill={img.isFeatured ? "currentColor" : "none"} />
-                  </button>
+                    <Star className="w-4 h-4" fill={img.isFeatured ? 'currentColor' : 'none'} />
+                  </OverlayButton>
 
-                  {/* Remove */}
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); removeImage(index); }}
-                    className="p-1.5 rounded-full bg-red-500/80 text-white hover:bg-red-600 backdrop-blur-sm transition-colors"
+                  <OverlayButton
                     title="Remove Image"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeImage(index);
+                    }}
+                    className="p-1.5 rounded-full bg-red-500/80 text-white hover:bg-red-600 backdrop-blur-sm transition-colors"
                   >
                     <X className="w-4 h-4" />
-                  </button>
+                  </OverlayButton>
                 </div>
 
-                {/* Reorder */}
                 <div className="flex justify-center gap-2">
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); moveImage(index, 'left'); }}
+                  <OverlayButton
+                    title="Move Left"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      moveImage(index, 'left');
+                    }}
                     disabled={index === 0}
                     className="p-1 rounded bg-black/50 text-white hover:bg-black/70 disabled:opacity-30 transition-colors"
-                    title="Move Left"
                   >
                     <MoveLeft className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); moveImage(index, 'right'); }}
+                  </OverlayButton>
+                  <OverlayButton
+                    title="Move Right"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      moveImage(index, 'right');
+                    }}
                     disabled={index === images.length - 1}
                     className="p-1 rounded bg-black/50 text-white hover:bg-black/70 disabled:opacity-30 transition-colors"
-                    title="Move Right"
                   >
                     <MoveRight className="w-4 h-4" />
-                  </button>
+                  </OverlayButton>
                 </div>
               </div>
 
-              {/* Status Indicators */}
               <div className="absolute bottom-0 inset-x-0 flex flex-col pointer-events-none">
-                 {img.isFeatured && (
-                  <div className="bg-primary text-white text-[10px] font-bold px-2 py-1 uppercase text-center w-full">
+                {img.isFeatured && (
+                  <StatusBadge className="bg-primary text-white text-[10px] font-bold px-2 py-1 uppercase text-center w-full">
                     Featured
-                  </div>
-                 )}
-                 {img.isUploading && (
-                   <div className="bg-blue-500/80 text-white text-[10px] font-bold px-2 py-1 text-center w-full">
-                     Uploading...
-                   </div>
-                 )}
+                  </StatusBadge>
+                )}
+                {img.isUploading && (
+                  <StatusBadge className="bg-blue-500/80 text-white text-[10px] font-bold px-2 py-1 text-center w-full">
+                    Uploading...
+                  </StatusBadge>
+                )}
               </div>
             </div>
           ))}

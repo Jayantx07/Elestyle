@@ -22,6 +22,41 @@ interface DataTableProps<T> {
   isLoading?: boolean;
 }
 
+function TableStateRow({ colSpan, children }: { colSpan: number; children: React.ReactNode }) {
+  return (
+    <tr>
+      <td colSpan={colSpan} className="px-6 py-10 text-center text-gray-500">
+        {children}
+      </td>
+    </tr>
+  );
+}
+
+function PagerButton({
+  onClick,
+  disabled,
+  roundedClass,
+  icon,
+  children,
+}: {
+  onClick: () => void;
+  disabled: boolean;
+  roundedClass: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 ${roundedClass} hover:bg-gray-100 focus:z-10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors`}
+    >
+      {icon}
+      {children}
+    </button>
+  );
+}
+
 export function DataTable<T>({
   data,
   columns,
@@ -69,20 +104,14 @@ export function DataTable<T>({
           </thead>
           <tbody>
             {isLoading ? (
-              <tr>
-                <td colSpan={columns.length} className="px-6 py-10 text-center text-gray-500">
-                  <div className="flex justify-center items-center gap-2">
-                    <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                    Loading data...
-                  </div>
-                </td>
-              </tr>
+              <TableStateRow colSpan={columns.length}>
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                  Loading data...
+                </div>
+              </TableStateRow>
             ) : data.length === 0 ? (
-              <tr>
-                <td colSpan={columns.length} className="px-6 py-10 text-center text-gray-500">
-                  No records found.
-                </td>
-              </tr>
+              <TableStateRow colSpan={columns.length}>No records found.</TableStateRow>
             ) : (
               data.map((item) => (
                 <tr
@@ -112,22 +141,23 @@ export function DataTable<T>({
             <span className="font-semibold">{totalPages}</span>
           </span>
           <div className="inline-flex rounded-md shadow-sm">
-            <button
+            <PagerButton
               onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 focus:z-10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              roundedClass="rounded-l-lg"
+              icon={<ChevronLeft className="w-4 h-4 mr-1" />}
             >
-              <ChevronLeft className="w-4 h-4 mr-1" />
               Prev
-            </button>
-            <button
+            </PagerButton>
+            <PagerButton
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-l-0 border-gray-300 rounded-r-lg hover:bg-gray-100 focus:z-10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              roundedClass="rounded-r-lg border-l-0"
+              icon={null}
             >
               Next
               <ChevronRight className="w-4 h-4 ml-1" />
-            </button>
+            </PagerButton>
           </div>
         </div>
       )}

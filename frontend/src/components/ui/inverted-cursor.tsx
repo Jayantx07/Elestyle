@@ -118,18 +118,18 @@ export const Cursor: React.FC<CursorProps> = ({ size = 20}) => {
       ref={cursorRef}
       className={`fixed top-0 left-0 pointer-events-none rounded-full flex items-center justify-center transition-all duration-300 ease-out z-[9999] ${
         isHovering 
-          ? 'bg-[#F5DE87] text-black shadow-[0_0_20px_rgba(245,222,135,0.4)]' 
+          ? 'border border-[rgba(3,152,158,0.45)] bg-[rgba(3,152,158,0.14)] text-black' 
           : 'bg-white mix-blend-difference'
       }`}
       style={{
         width: currentSize,
         height: currentSize,
-        opacity: (visible && !isHidden) ? 1 : 0,
+        opacity: (visible && !isHidden) ? 0.9 : 0,
       }}
       aria-hidden="true"
     >
       <span 
-        className={`text-[10px] font-bold tracking-[0.2em] uppercase select-none transition-opacity duration-300 ${isHovering ? 'opacity-100' : 'opacity-0'}`}
+        className={`text-[10px] font-semibold tracking-[0.18em] uppercase select-none transition-opacity duration-300 ${isHovering ? 'opacity-100' : 'opacity-0'}`}
       >
         {cursorText}
       </span>

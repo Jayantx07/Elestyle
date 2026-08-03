@@ -4,66 +4,90 @@ import type { CartItem } from '../../contexts/CartContext';
 
 export interface CartSummaryProps {
   items: CartItem[];
+  subtotal: number;
+  shipping: number;
+  tax: number;
+  grandTotal: number;
   onCheckout: () => void;
+  onContinueShopping: () => void;
 }
 
-export const CartSummary: React.FC<CartSummaryProps> = ({ items, onCheckout }) => {
-  const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+export const CartSummary: React.FC<CartSummaryProps> = ({
+  items,
+  subtotal,
+  shipping,
+  tax,
+  grandTotal,
+  onCheckout,
+  onContinueShopping,
+}) => {
+  const formatPrice = (value: number) =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
 
   return (
-    <div className="bg-transparent md:bg-black/5 p-2 md:p-6 lg:p-8 sticky top-24">
-      
-      <h2 className="font-fraunces font-medium text-lg uppercase tracking-wide mb-6" style={{ color: 'var(--text-primary)' }}>
-        Order Summary
-      </h2>
+    <aside className="rounded-[28px] border border-black/5 bg-white/80 p-5 md:p-7 lg:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.04)] backdrop-blur-sm">
+      <div className="mb-7 flex items-start justify-between gap-4">
+        <div>
+          <p className="font-sans text-[10px] uppercase tracking-[0.24em] text-black/35 mb-3">Summary</p>
+          <h2 className="font-fraunces text-[26px] leading-none text-charcoal">Order Summary</h2>
+        </div>
+      </div>
 
-      {/* Item Breakdown */}
-      <div className="flex flex-col gap-4 mb-8">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between gap-6 text-[13px] text-black/55">
+          <span className="font-sans uppercase tracking-[0.16em]">Subtotal</span>
+          <span className="font-sans font-medium text-charcoal">{formatPrice(subtotal)}</span>
+        </div>
+        <div className="flex items-center justify-between gap-6 text-[13px] text-black/55">
+          <span className="font-sans uppercase tracking-[0.16em]">Shipping</span>
+          <span className="font-sans font-medium text-charcoal">{formatPrice(shipping)}</span>
+        </div>
+        <div className="flex items-center justify-between gap-6 text-[13px] text-black/55">
+          <span className="font-sans uppercase tracking-[0.16em]">Taxes</span>
+          <span className="font-sans font-medium text-charcoal">{formatPrice(tax)}</span>
+        </div>
+      </div>
+
+      <div className="my-7 h-px bg-black/5" />
+
+      <div className="flex items-end justify-between gap-6">
+        <span className="font-sans text-[13px] uppercase tracking-[0.18em] text-black/60">Total</span>
+        <span className="font-fraunces text-[30px] leading-none text-charcoal">
+          {formatPrice(grandTotal)}
+        </span>
+      </div>
+
+      <div className="mt-8 space-y-3">
+        <Button
+          variant="secondary"
+          className="w-full rounded-full px-6 py-4 text-[11px] tracking-[0.2em] text-white"
+          style={{ backgroundColor: '#03989E' }}
+          onClick={onCheckout}
+        >
+          Proceed to Checkout
+        </Button>
+
+        <Button
+          variant="ghost"
+          className="w-full rounded-full border border-black/10 px-6 py-4 text-[11px] tracking-[0.2em] text-charcoal hover:bg-black/5"
+          onClick={onContinueShopping}
+        >
+          Continue Shopping
+        </Button>
+      </div>
+
+      <div className="mt-8 rounded-[22px] border border-black/5 bg-black/[0.02] px-5 py-4">
+        <p className="font-sans text-[11px] uppercase tracking-[0.18em] text-black/35">Need help?</p>
+        <p className="mt-2 font-sans text-[13px] leading-relaxed text-black/50">
+          Your order details are reviewed before checkout so the final total stays clear and easy to scan.
+        </p>
+      </div>
+
+      <div className="sr-only">
         {items.map((item) => (
-          <div key={item.id} className="flex justify-between items-start gap-4">
-            <span className="font-sans text-[11px] uppercase tracking-wide leading-relaxed" style={{ color: 'var(--text-primary)' }}>
-              {item.title} {item.quantity > 1 && <span className="opacity-60 lowercase">x{item.quantity}</span>}
-            </span>
-            <span className="font-sans text-[12px] font-medium shrink-0" style={{ color: 'var(--text-primary)' }}>
-              ${(item.price * item.quantity).toLocaleString()}
-            </span>
-          </div>
+          <span key={item.id}>{item.title} {item.quantity}</span>
         ))}
       </div>
-
-      <div className="w-full h-px bg-black/20 mb-6" />
-
-      {/* Tax */}
-      <div className="flex justify-between items-center mb-6">
-        <span className="font-sans text-[11px] uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>
-          SALES TAX
-        </span>
-        <span className="font-sans text-[12px] lowercase" style={{ color: 'var(--text-primary)' }}>
-          Included
-        </span>
-      </div>
-
-      <div className="w-full h-px bg-black/20 mb-6" />
-
-      {/* Total */}
-      <div className="flex justify-between items-center mb-10">
-        <span className="font-sans text-[12px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>
-          TOTAL
-        </span>
-        <span className="font-sans text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
-          ${total.toLocaleString()}
-        </span>
-      </div>
-
-      {/* Checkout Button */}
-      <Button 
-        variant="secondary" 
-        className="w-full bg-black hover:bg-black/80 rounded-none h-12 text-[11px] tracking-widest"
-        onClick={onCheckout}
-      >
-        PROCEED TO CHECKOUT
-      </Button>
-
-    </div>
+    </aside>
   );
 };

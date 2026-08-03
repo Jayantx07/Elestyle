@@ -4,6 +4,75 @@ import { Typography } from '../components/atoms/Typography';
 import { Button } from '../components/atoms/Button';
 import { useCart, type CartItem } from '../contexts/CartContext';
 
+type AddressValues = {
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+};
+
+const sectionClass = 'bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100';
+const inputClass = 'w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-black transition-colors';
+
+function TextInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  const { className = '', ...rest } = props;
+
+  return <input {...rest} className={`${inputClass} ${className}`.trim()} />;
+}
+
+function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  const { className = '', ...rest } = props;
+
+  return <textarea {...rest} className={`${inputClass} ${className}`.trim()} />;
+}
+
+function AddressFields({
+  values,
+  onChange,
+  statePlaceholder,
+}: {
+  values: AddressValues;
+  onChange: (next: AddressValues) => void;
+  statePlaceholder: string;
+}) {
+  const update = (key: keyof AddressValues) => (event: React.ChangeEvent<HTMLInputElement>) =>
+    onChange({ ...values, [key]: event.target.value });
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <TextInput required type="text" placeholder="Address Line 1" value={values.addressLine1} onChange={update('addressLine1')} className="md:col-span-2" />
+      <TextInput type="text" placeholder="Address Line 2 (Optional)" value={values.addressLine2} onChange={update('addressLine2')} className="md:col-span-2" />
+      <TextInput required type="text" placeholder="City" value={values.city} onChange={update('city')} />
+      <TextInput required type="text" placeholder={statePlaceholder} value={values.state} onChange={update('state')} />
+      <TextInput required type="text" placeholder="Postal Code" value={values.postalCode} onChange={update('postalCode')} />
+      <TextInput required type="text" placeholder="Country" value={values.country} onChange={update('country')} />
+    </div>
+  );
+}
+
+function PaymentOption({
+  value,
+  selected,
+  onChange,
+  children,
+}: {
+  value: string;
+  selected: string;
+  onChange: (value: string) => void;
+  children: React.ReactNode;
+}) {
+  const isSelected = selected === value;
+
+  return (
+    <label className={`flex items-center gap-4 p-4 border rounded-xl cursor-pointer transition-colors ${isSelected ? 'border-black bg-black/5' : 'border-gray-200'}`}>
+      <input type="radio" name="payment" value={value} checked={isSelected} onChange={(event) => onChange(event.target.value)} className="w-5 h-5 text-black focus:ring-black" />
+      <span className="font-sans font-medium">{children}</span>
+    </label>
+  );
+}
+
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -121,35 +190,24 @@ export default function CheckoutPage() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-        {/* Left Column: Form */}
         <div className="lg:col-span-7 xl:col-span-8 flex flex-col gap-10">
           <form id="checkout-form" onSubmit={handleSubmit} className="flex flex-col gap-10">
-            
-            {/* Contact Info */}
-            <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
+
+            <section className={sectionClass}>
               <Typography variant="h4" className="mb-6">Contact Information</Typography>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input required type="text" placeholder="Full Name" value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-black transition-colors" />
-                <input required type="email" placeholder="Email Address" value={customer.email} onChange={e => setCustomer({...customer, email: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-black transition-colors" />
-                <input required type="tel" placeholder="Phone Number" value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} className="w-full md:col-span-2 px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-black transition-colors" />
+                <TextInput required type="text" placeholder="Full Name" value={customer.name} onChange={(e) => setCustomer({ ...customer, name: e.target.value })} />
+                <TextInput required type="email" placeholder="Email Address" value={customer.email} onChange={(e) => setCustomer({ ...customer, email: e.target.value })} />
+                <TextInput required type="tel" placeholder="Phone Number" value={customer.phone} onChange={(e) => setCustomer({ ...customer, phone: e.target.value })} className="md:col-span-2" />
               </div>
             </section>
 
-            {/* Shipping Address */}
-            <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
+            <section className={sectionClass}>
               <Typography variant="h4" className="mb-6">Shipping Address</Typography>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input required type="text" placeholder="Address Line 1" value={shippingAddress.addressLine1} onChange={e => setShippingAddress({...shippingAddress, addressLine1: e.target.value})} className="w-full md:col-span-2 px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-black transition-colors" />
-                <input type="text" placeholder="Address Line 2 (Optional)" value={shippingAddress.addressLine2} onChange={e => setShippingAddress({...shippingAddress, addressLine2: e.target.value})} className="w-full md:col-span-2 px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-black transition-colors" />
-                <input required type="text" placeholder="City" value={shippingAddress.city} onChange={e => setShippingAddress({...shippingAddress, city: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-black transition-colors" />
-                <input required type="text" placeholder="State/Province" value={shippingAddress.state} onChange={e => setShippingAddress({...shippingAddress, state: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-black transition-colors" />
-                <input required type="text" placeholder="Postal Code" value={shippingAddress.postalCode} onChange={e => setShippingAddress({...shippingAddress, postalCode: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-black transition-colors" />
-                <input required type="text" placeholder="Country" value={shippingAddress.country} onChange={e => setShippingAddress({...shippingAddress, country: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-black transition-colors" />
-              </div>
+              <AddressFields values={shippingAddress} onChange={setShippingAddress} statePlaceholder="State/Province" />
             </section>
 
-            {/* Billing Address Toggle */}
-            <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
+            <section className={sectionClass}>
               <div className="flex items-center justify-between mb-2">
                 <Typography variant="h4">Billing Address</Typography>
               </div>
@@ -159,44 +217,34 @@ export default function CheckoutPage() {
               </label>
 
               {!sameAsShipping && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                  <input required type="text" placeholder="Address Line 1" value={billingAddress.addressLine1} onChange={e => setBillingAddress({...billingAddress, addressLine1: e.target.value})} className="w-full md:col-span-2 px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-black transition-colors" />
-                  <input type="text" placeholder="Address Line 2 (Optional)" value={billingAddress.addressLine2} onChange={e => setBillingAddress({...billingAddress, addressLine2: e.target.value})} className="w-full md:col-span-2 px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-black transition-colors" />
-                  <input required type="text" placeholder="City" value={billingAddress.city} onChange={e => setBillingAddress({...billingAddress, city: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-black transition-colors" />
-                  <input required type="text" placeholder="State" value={billingAddress.state} onChange={e => setBillingAddress({...billingAddress, state: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-black transition-colors" />
-                  <input required type="text" placeholder="Postal Code" value={billingAddress.postalCode} onChange={e => setBillingAddress({...billingAddress, postalCode: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-black transition-colors" />
-                  <input required type="text" placeholder="Country" value={billingAddress.country} onChange={e => setBillingAddress({...billingAddress, country: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-black transition-colors" />
+                <div className="mt-6">
+                  <AddressFields values={billingAddress} onChange={setBillingAddress} statePlaceholder="State" />
                 </div>
               )}
             </section>
 
-            {/* Payment Method */}
-            <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
+            <section className={sectionClass}>
               <Typography variant="h4" className="mb-6">Payment Method</Typography>
               <div className="flex flex-col gap-3">
-                <label className={`flex items-center gap-4 p-4 border rounded-xl cursor-pointer transition-colors ${paymentMethod === 'Credit Card' ? 'border-black bg-black/5' : 'border-gray-200'}`}>
-                  <input type="radio" name="payment" value="Credit Card" checked={paymentMethod === 'Credit Card'} onChange={(e) => setPaymentMethod(e.target.value)} className="w-5 h-5 text-black focus:ring-black" />
-                  <span className="font-sans font-medium">Credit Card (Dummy)</span>
-                </label>
-                <label className={`flex items-center gap-4 p-4 border rounded-xl cursor-pointer transition-colors ${paymentMethod === 'Cash on Delivery' ? 'border-black bg-black/5' : 'border-gray-200'}`}>
-                  <input type="radio" name="payment" value="Cash on Delivery" checked={paymentMethod === 'Cash on Delivery'} onChange={(e) => setPaymentMethod(e.target.value)} className="w-5 h-5 text-black focus:ring-black" />
-                  <span className="font-sans font-medium">Cash on Delivery</span>
-                </label>
+                <PaymentOption value="Credit Card" selected={paymentMethod} onChange={setPaymentMethod}>
+                  Credit Card (Dummy)
+                </PaymentOption>
+                <PaymentOption value="Cash on Delivery" selected={paymentMethod} onChange={setPaymentMethod}>
+                  Cash on Delivery
+                </PaymentOption>
               </div>
             </section>
 
-            {/* Notes */}
-            <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
+            <section className={sectionClass}>
               <Typography variant="h4" className="mb-6">Order Notes</Typography>
-              <textarea placeholder="Notes about your order, e.g. special notes for delivery." value={notes} onChange={e => setNotes(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-black transition-colors min-h-[120px] resize-y" />
+              <TextArea placeholder="Notes about your order, e.g. special notes for delivery." value={notes} onChange={(e) => setNotes(e.target.value)} className="min-h-[120px] resize-y" />
             </section>
 
           </form>
         </div>
 
-        {/* Right Column: Summary */}
         <div className="lg:col-span-5 xl:col-span-4 sticky top-24">
-          <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col">
+          <div className={`${sectionClass} flex flex-col`}>
             <Typography variant="h4" className="mb-6">Order Summary</Typography>
             
             <div className="flex flex-col gap-4 mb-8 max-h-[40vh] overflow-y-auto pr-2">

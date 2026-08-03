@@ -6,6 +6,7 @@ import ProductPage from '@/pages/ProductPage';
 import CartPage from '@/pages/CartPage';
 import ProfilePage from '@/pages/ProfilePage';
 import WishlistPage from '@/pages/WishlistPage';
+import CategoriesPage from '@/pages/CategoriesPage';
 
 import CategoryPage from '@/pages/CategoryPage';
 import SearchPage from '@/pages/SearchPage';
@@ -27,7 +28,7 @@ import AdminLayout from '@/admin/components/layout/AdminLayout';
 import DashboardPage from '@/admin/pages/DashboardPage';
 import ProductsPage from '@/admin/pages/ProductsPage';
 import ProductFormPage from '@/admin/pages/ProductFormPage';
-import CategoriesPage from '@/admin/pages/CategoriesPage';
+import AdminCategoriesPage from '@/admin/pages/CategoriesPage';
 import CategoryFormPage from '@/admin/pages/CategoryFormPage';
 import OrdersPage from '@/admin/pages/OrdersPage';
 import OrderDetailsPage from '@/admin/pages/OrderDetailsPage';
@@ -61,6 +62,10 @@ export const router = createBrowserRouter([
       {
         path: 'cart',
         element: <CartPage />,
+      },
+      {
+        path: 'categories',
+        element: <CategoriesPage />,
       },
       {
         path: 'wishlist',
@@ -140,7 +145,7 @@ export const router = createBrowserRouter([
           },
           {
             path: 'categories',
-            element: <CategoriesPage />,
+            element: <AdminCategoriesPage />,
           },
           {
             path: 'categories/:id',

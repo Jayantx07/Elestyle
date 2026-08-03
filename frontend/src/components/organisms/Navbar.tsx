@@ -19,6 +19,14 @@ type CategoryGroup = {
   subcategories?: { label: string; href: string }[];
 };
 
+const desktopNavLinkClass = (isActive: boolean) =>
+  `font-sans text-[14px] transition-colors duration-200 ${isActive ? 'font-semibold text-gray-900' : 'font-medium text-gray-700 hover:text-gray-900'}`;
+
+const mobileNavLinkClass = (isActive: boolean) =>
+  `px-6 py-4 font-sans text-sm transition-colors duration-200 ${isActive ? 'font-semibold text-[var(--text-primary)] bg-gray-50' : 'font-medium text-[var(--text-secondary)] hover:bg-gray-50 hover:text-[var(--text-primary)]'}`;
+
+const iconButtonStyle = { color: 'var(--text-primary)', transformOrigin: 'center' } as React.CSSProperties;
+
 const MAIN_NAV_LINKS = [
   { label: 'Home', href: '/' },
   { label: 'About Us', href: '/about' },
@@ -153,6 +161,7 @@ export const Navbar: React.FC = () => {
   }, [location.pathname]);
 
   const isShopSectionActive = location.pathname.startsWith('/shop/');
+  const isCategoriesPageActive = location.pathname === '/categories';
 
   return (
     <header ref={headerRef} className="fixed left-0 right-0 top-6 z-50 pointer-events-none">
@@ -191,38 +200,46 @@ export const Navbar: React.FC = () => {
               <NavLink
                 to="/"
                 end
-                className={({ isActive }) =>
-                  `font-sans text-[14px] transition-colors duration-200 ${isActive ? 'font-semibold text-gray-900' : 'font-medium text-gray-700 hover:text-gray-900'}`
-                }
+                className={({ isActive }) => desktopNavLinkClass(isActive)}
               >
                 Home
               </NavLink>
 
-              <button
-                type="button"
-                aria-haspopup="menu"
-                aria-expanded={isCategoriesOpen}
-                onClick={() => setIsCategoriesOpen((open) => !open)}
+              <div
+                className="relative flex items-center gap-1"
                 onMouseEnter={() => setIsCategoriesOpen(true)}
-                className={`font-sans text-[14px] transition-colors duration-200 ${isCategoriesOpen || isShopSectionActive ? 'font-semibold text-black' : 'font-medium text-black hover:text-gray-800'}`}
+                onMouseLeave={() => setIsCategoriesOpen(false)}
               >
-                Categories
-              </button>
+                <NavLink
+                  to="/categories"
+                  className={`font-sans text-[14px] transition-colors duration-200 ${isCategoriesPageActive || isShopSectionActive ? 'font-semibold text-black' : 'font-medium text-black hover:text-gray-800'}`}
+                >
+                  Categories
+                </NavLink>
+                <button
+                  type="button"
+                  aria-haspopup="menu"
+                  aria-expanded={isCategoriesOpen}
+                  onClick={() => setIsCategoriesOpen((open) => !open)}
+                  className="-mr-1 rounded-full p-1 text-black/45 transition-colors hover:text-black"
+                  aria-label="Open categories menu"
+                >
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+              </div>
 
               <NavLink
                 to="/about"
-                className={({ isActive }) =>
-                  `font-sans text-[14px] transition-colors duration-200 ${isActive ? 'font-semibold text-gray-900' : 'font-medium text-gray-700 hover:text-gray-900'}`
-                }
+                className={({ isActive }) => desktopNavLinkClass(isActive)}
               >
                 About Us
               </NavLink>
 
               <NavLink
                 to="/contact"
-                className={({ isActive }) =>
-                  `font-sans text-[14px] transition-colors duration-200 ${isActive ? 'font-semibold text-gray-900' : 'font-medium text-gray-700 hover:text-gray-900'}`
-                }
+                className={({ isActive }) => desktopNavLinkClass(isActive)}
               >
                 Contact Us
               </NavLink>
@@ -313,7 +330,7 @@ export const Navbar: React.FC = () => {
                 <button
                   aria-label="Search"
                   className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center hover:bg-gray-100 transition-transform duration-150"
-                  style={{ color: 'var(--text-primary)', transformOrigin: 'center' }}
+                  style={iconButtonStyle}
                   onClick={() => setIsSearchOpen(true)}
                 >
                   <svg width="20" height="20" className="md:w-[22px] md:h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -340,7 +357,7 @@ export const Navbar: React.FC = () => {
               to="/cart"
               aria-label="Shopping bag"
               className="relative w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center hover:scale-105 transition-transform duration-150"
-              style={{ color: 'var(--text-primary)', transformOrigin: 'center' }}
+              style={iconButtonStyle}
             >
               <svg width="20" height="20" className="md:w-[22px] md:h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
@@ -359,7 +376,7 @@ export const Navbar: React.FC = () => {
               to="/wishlist"
               aria-label="Wishlist"
               className="relative w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center hover:scale-105 transition-transform duration-150"
-              style={{ color: 'var(--text-primary)', transformOrigin: 'center' }}
+              style={iconButtonStyle}
             >
               <svg width="20" height="20" className="md:w-[22px] md:h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -377,7 +394,7 @@ export const Navbar: React.FC = () => {
               aria-label={user ? `Profile (${user.name})` : 'Sign In'}
               title={user ? user.name : 'Sign In'}
               className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center overflow-hidden border border-gray-200 hover:scale-105 transition-transform duration-150"
-              style={{ color: 'var(--text-primary)', transformOrigin: 'center' }}
+              style={iconButtonStyle}
             >
               {user ? (
                 <img
@@ -398,7 +415,7 @@ export const Navbar: React.FC = () => {
               aria-label={menuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={menuOpen}
               className="lg:hidden w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-transform duration-150"
-              style={{ color: 'var(--text-primary)', transformOrigin: 'center' }}
+              style={iconButtonStyle}
               onClick={() => setMenuOpen((prev) => {
                 const next = !prev;
                 if (!next) {
@@ -428,11 +445,17 @@ export const Navbar: React.FC = () => {
               to="/"
               end
               onClick={() => setMenuOpen(false)}
-              className={({ isActive }) =>
-                `px-6 py-4 font-sans text-sm transition-colors duration-200 ${isActive ? 'font-semibold text-[var(--text-primary)] bg-gray-50' : 'font-medium text-[var(--text-secondary)] hover:bg-gray-50 hover:text-[var(--text-primary)]'}`
-              }
+              className={({ isActive }) => mobileNavLinkClass(isActive)}
             >
               Home
+            </NavLink>
+
+            <NavLink
+              to="/categories"
+              onClick={() => setMenuOpen(false)}
+              className={({ isActive }) => mobileNavLinkClass(isActive)}
+            >
+              Categories
             </NavLink>
 
             <button
@@ -484,14 +507,12 @@ export const Navbar: React.FC = () => {
               </div>
             )}
 
-            {MAIN_NAV_LINKS.map((link) => (
+            {MAIN_NAV_LINKS.slice(1).map((link) => (
               <NavLink
                 key={link.label}
                 to={link.href}
                 onClick={() => setMenuOpen(false)}
-                className={({ isActive }) =>
-                  `px-6 py-4 font-sans text-sm transition-colors duration-200 ${isActive ? 'font-semibold text-[var(--text-primary)] bg-gray-50' : 'font-medium text-[var(--text-secondary)] hover:bg-gray-50 hover:text-[var(--text-primary)]'}`
-                }
+                className={({ isActive }) => mobileNavLinkClass(isActive)}
               >
                 {link.label}
               </NavLink>
