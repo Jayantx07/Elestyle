@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../atoms/Button';
 import { Typography } from '../atoms/Typography';
@@ -14,6 +14,7 @@ export interface ProductDetailSectionProps {
     imageSrc: string;
     thumbnails: string[];
     mainNotes: string[];
+    variants?: any[];
   };
 }
 
@@ -22,6 +23,35 @@ export const ProductDetailSection: React.FC<ProductDetailSectionProps> = ({ prod
   const [activeImage, setActiveImage] = useState(product.imageSrc);
   const [isDescOpen, setIsDescOpen] = useState(true);
   const [isDeliveryOpen, setIsDeliveryOpen] = useState(true);
+  const [selectedVariant, setSelectedVariant] = useState<any | null>(
+    product.variants && product.variants.length > 0 ? product.variants[0] : null
+  );
+
+  const currentPrice = selectedVariant && selectedVariant.price && selectedVariant.price > 0 ? selectedVariant.price : product.price;
+  const currentTitle = selectedVariant
+    ? `${product.title} (${selectedVariant.name})`
+    : product.title;
+
+  const handleSelectVariant = (v: any) => {
+    setSelectedVariant(v);
+    const varImages = v.images && v.images.length > 0 ? v.images.map((i: any) => i.secure_url) : (v.image ? [v.image] : []);
+    if (varImages.length > 0) {
+      setActiveImage(varImages[0]);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedVariant) {
+      const varImages = selectedVariant.images && selectedVariant.images.length > 0 ? selectedVariant.images.map((i: any) => i.secure_url) : (selectedVariant.image ? [selectedVariant.image] : []);
+      if (varImages.length > 0) {
+        setActiveImage(varImages[0]);
+      } else {
+        setActiveImage(product.imageSrc);
+      }
+    } else {
+      setActiveImage(product.imageSrc);
+    }
+  }, [product]);
 
   // Magnifier state
   const [backgroundPosition, setBackgroundPosition] = useState('0% 0%');
@@ -44,9 +74,9 @@ export const ProductDetailSection: React.FC<ProductDetailSectionProps> = ({ prod
 
   const handleAddToCart = () => {
     addToCart({
-      id: product.id,
-      title: product.title,
-      price: product.price,
+      id: selectedVariant ? `${product.id}-${selectedVariant.name.replace(/\s+/g, '-')}` : product.id,
+      title: currentTitle,
+      price: currentPrice,
       imageSrc: product.imageSrc,
       quantity,
     });
@@ -54,9 +84,9 @@ export const ProductDetailSection: React.FC<ProductDetailSectionProps> = ({ prod
 
   const handleBuyNow = () => {
     sessionStorage.setItem('temp_checkout_session', JSON.stringify([{
-      id: product.id,
-      title: product.title,
-      price: product.price,
+      id: selectedVariant ? `${product.id}-${selectedVariant.name.replace(/\s+/g, '-')}` : product.id,
+      title: currentTitle,
+      price: currentPrice,
       imageSrc: product.imageSrc,
       quantity,
     }]));
@@ -105,23 +135,92 @@ export const ProductDetailSection: React.FC<ProductDetailSectionProps> = ({ prod
               />
             )}
           </div>
-          <div className="grid grid-cols-3 gap-4">
-            {product.thumbnails.map((thumb, idx) => (
-              <button 
-                key={idx}
-                onClick={() => setActiveImage(thumb)}
-                className={`aspect-square rounded-2xl overflow-hidden transition-all duration-300 border-2 ${activeImage === thumb ? 'border-[var(--text-primary)] opacity-100' : 'border-transparent opacity-60 hover:opacity-100'}`}
-              >
-                <img src={thumb} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
-              </button>
-            ))}
-          </div>
+          {(() => {
+            const variantImages = selectedVariant && selectedVariant.images && selectedVariant.images.length > 0
+              ? selectedVariant.images.map((i: any) => i.secure_url)
+              : (selectedVariant && selectedVariant.image ? [selectedVariant.image, ...product.thumbnails.filter((t: string) => t !== selectedVariant.image)] : product.thumbnails);
+            const displayThumbnails = variantImages && variantImages.length > 0 ? variantImages : product.thumbnails;
+            
+            return (
+              <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
+                {displayThumbnails.map((thumb: string, idx: number) => (
+                  <button 
+                    key={idx}
+                    type="button"
+                    onClick={() => setActiveImage(thumb)}
+                    className={`aspect-square rounded-xl overflow-hidden transition-all duration-300 border-2 ${activeImage === thumb ? 'border-[#03989E] opacity-100 shadow-sm scale-[1.02]' : 'border-gray-200 opacity-60 hover:opacity-100'}`}
+                  >
+                    <img src={thumb} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Right Column: Info */}
         <div className="flex flex-col pt-4">
           <Typography variant="h2" className="mb-2">{product.title}</Typography>
-          <Typography variant="h5" className="mb-8 font-sans font-bold">${product.price.toFixed(2)}</Typography>
+          <Typography variant="h5" className="mb-8 font-sans font-bold">${currentPrice.toFixed(2)}</Typography>
+
+          {/* More Options / Visual Product Variants */}
+          {product.variants && product.variants.length > 0 && (
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-3.5">
+                <span className="text-base font-sans font-medium text-gray-900">More Options</span>
+                {selectedVariant && (
+                  <span className="text-sm font-semibold text-[#03989E]">
+                    — {selectedVariant.name}
+                    {selectedVariant.price > 0 && selectedVariant.price !== product.price && ` ($${selectedVariant.price})`}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center flex-wrap gap-3">
+                {product.variants.map((v, idx) => {
+                  const isSelected = selectedVariant?._id === v._id || selectedVariant?.name === v.name;
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleSelectVariant(v)}
+                      title={`${v.name}${v.price > 0 ? ` - $${v.price}` : ''}`}
+                      className={`transition-all relative rounded-xl overflow-hidden flex items-center justify-center ${
+                        v.image
+                          ? `w-[76px] h-[98px] p-1 ${
+                              isSelected
+                                ? 'border-[2.5px] border-[#03989E] bg-white shadow-md shadow-[#03989E]/10 scale-[1.03]'
+                                : 'border border-gray-300 bg-gray-50 opacity-85 hover:opacity-100 hover:border-gray-400'
+                            }`
+                          : `px-4 py-2.5 text-sm font-semibold border-2 rounded-xl gap-2 ${
+                              isSelected
+                                ? 'border-[#03989E] bg-[#03989E]/10 text-[#03989E] shadow-xs'
+                                : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                            }`
+                      }`}
+                    >
+                      {v.image ? (
+                        <img src={v.image} alt={v.name} className="w-full h-full object-cover rounded-lg aspect-[3/4]" />
+                      ) : (
+                        <>
+                          {v.colorHex && (
+                            <span
+                              className="w-3.5 h-3.5 rounded-full inline-block border border-gray-300 shadow-xs flex-shrink-0"
+                              style={{ backgroundColor: v.colorHex }}
+                            />
+                          )}
+                          <span className="truncate">{v.name}</span>
+                          {v.price > 0 && v.price !== product.price && (
+                            <span className="text-xs font-normal opacity-80 flex-shrink-0">(${v.price})</span>
+                          )}
+                        </>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Description Accordion */}
           <div className="rounded-2xl mb-8 overflow-hidden transition-all duration-300" style={{ backgroundColor: 'var(--bg-page)', border: '1px solid var(--border)' }}>

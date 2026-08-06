@@ -6,10 +6,12 @@ const {
   getLatestProducts,
   getRelatedProducts,
   getProductBySlug,
+  getProductFacets,
 } = require('../controllers/productController');
 
 router.get('/featured', getFeaturedProducts);
 router.get('/latest', getLatestProducts);
+router.get('/facets', getProductFacets);
 router.get('/related/:slug', getRelatedProducts);
 router.get('/:slug', getProductBySlug);
 const reviewRoutes = require('./reviewRoutes');

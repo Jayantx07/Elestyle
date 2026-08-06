@@ -119,7 +119,7 @@ const ContactPage: React.FC = () => {
                       type="text"
                       name="name"
                       placeholder="Your name"
-                      className="w-full rounded-2xl border border-[#E2D8C9] bg-white px-4 py-3 text-[14px] text-[#2c2a28] outline-none transition-colors placeholder:text-[#8A817A] focus:border-[#B9985A]"
+                      className="w-full rounded-2xl border border-[#E2D8C9] bg-white px-4 py-3 text-[14px] text-[#2c2a28] outline-none transition-colors placeholder:text-[#8A817A] focus:border-[#03989E]"
                     />
                   </label>
 
@@ -129,7 +129,7 @@ const ContactPage: React.FC = () => {
                       type="email"
                       name="email"
                       placeholder="Your email"
-                      className="w-full rounded-2xl border border-[#E2D8C9] bg-white px-4 py-3 text-[14px] text-[#2c2a28] outline-none transition-colors placeholder:text-[#8A817A] focus:border-[#B9985A]"
+                      className="w-full rounded-2xl border border-[#E2D8C9] bg-white px-4 py-3 text-[14px] text-[#2c2a28] outline-none transition-colors placeholder:text-[#8A817A] focus:border-[#03989E]"
                     />
                   </label>
                 </div>
@@ -140,7 +140,7 @@ const ContactPage: React.FC = () => {
                     name="message"
                     rows={6}
                     placeholder="Share the collection or order details you need help with"
-                    className="w-full rounded-2xl border border-[#E2D8C9] bg-white px-4 py-3 text-[14px] text-[#2c2a28] outline-none transition-colors placeholder:text-[#8A817A] focus:border-[#B9985A] resize-y"
+                    className="w-full rounded-2xl border border-[#E2D8C9] bg-white px-4 py-3 text-[14px] text-[#2c2a28] outline-none transition-colors placeholder:text-[#8A817A] focus:border-[#03989E] resize-y"
                   />
                 </label>
 

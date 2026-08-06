@@ -11,11 +11,11 @@
   --surface-card:    #FFFFFF;
   --text-primary:    #1B2A2E;
   --text-secondary:  #4A5A62;
-  --accent:          #03989e;
-  --accent-hover:    #027a7e;
-  --accent-gold:     #C9A05C;
-  --accent-gold-hover: #B78A45;
-  --accent-secondary: #C9A05C;
+  --accent:          #03989E;
+  --accent-hover:    #027A7E;
+  --accent-gold:     #03989E;
+  --accent-gold-hover: #027A7E;
+  --accent-secondary: #03989E;
   --border:          #E5E7EB;
 }
 
@@ -23,46 +23,16 @@
    CATEGORY THEME OVERRIDES — set via data-category on <html>.
    Only these tokens change; everything else inherits :root.
    ============================================================ */
-html[data-category="macrame"] {
-  --bg-page:          #FFFFFF;
-  --accent:           #C1694F;
-  --accent-hover:     #A85640;
-  --accent-secondary: #E8C9A0;
-}
-
-html[data-category="soaps"] {
-  --bg-page:          #FFFFFF;
-  --accent:           #BA7517;
-  --accent-hover:     #9C6110;
-  --accent-secondary: #FAEEDA;
-}
-
-html[data-category="earrings"] {
-  --bg-page:          #FFFFFF;
-  --accent:           #72243E;
-  --accent-hover:     #5C1D32;
-  --accent-secondary: #D4AF7A;
-}
-
-html[data-category="rajasthani"] {
-  --bg-page:          #FFFFFF;
-  --accent:           #D4537E;
-  --accent-hover:     #B93E67;
-  --accent-secondary: #EF9F27;
-}
-
-html[data-category="wedding"] {
-  --bg-page:          #FFFFFF;
-  --accent:           #791F1F;
-  --accent-hover:     #611818;
-  --accent-secondary: #C9A05C;
-}
-
+html[data-category="macrame"],
+html[data-category="soaps"],
+html[data-category="earrings"],
+html[data-category="rajasthani"],
+html[data-category="wedding"],
 html[data-category="furnishing"] {
   --bg-page:          #FFFFFF;
-  --accent:           #5F7052;
-  --accent-hover:     #4C5A42;
-  --accent-secondary: #C9B79C;
+  --accent:           #03989E;
+  --accent-hover:     #027A7E;
+  --accent-secondary: #03989E;
 }
 
 /* ============================================================

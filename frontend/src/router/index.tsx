@@ -30,6 +30,10 @@ import ProductsPage from '@/admin/pages/ProductsPage';
 import ProductFormPage from '@/admin/pages/ProductFormPage';
 import AdminCategoriesPage from '@/admin/pages/CategoriesPage';
 import CategoryFormPage from '@/admin/pages/CategoryFormPage';
+import SubCategoriesPage from '@/admin/pages/SubCategoriesPage';
+import SubCategoryFormPage from '@/admin/pages/SubCategoryFormPage';
+import FiltersPage from '@/admin/pages/FiltersPage';
+import FilterFormPage from '@/admin/pages/FilterFormPage';
 import OrdersPage from '@/admin/pages/OrdersPage';
 import OrderDetailsPage from '@/admin/pages/OrderDetailsPage';
 import CustomersPage from '@/admin/pages/CustomersPage';
@@ -150,6 +154,22 @@ export const router = createBrowserRouter([
           {
             path: 'categories/:id',
             element: <CategoryFormPage />,
+          },
+          {
+            path: 'subcategories',
+            element: <SubCategoriesPage />,
+          },
+          {
+            path: 'subcategories/:id',
+            element: <SubCategoryFormPage />,
+          },
+          {
+            path: 'filters',
+            element: <FiltersPage />,
+          },
+          {
+            path: 'filters/:id',
+            element: <FilterFormPage />,
           },
           {
             path: 'orders',

@@ -18,19 +18,27 @@ const adminInventoryRoutes = require('../adminInventoryRoutes');
 const adminCouponRoutes = require('../adminCouponRoutes');
 const adminAnalyticsRoutes = require('../adminAnalyticsRoutes');
 const adminSettingsRoutes = require('../adminSettingsRoutes');
+const adminSubCategoryRoutes = require('../adminSubCategoryRoutes');
+const adminFilterRoutes = require('../adminFilterRoutes');
 const authRoutes = require('../authRoutes');
 const cartRoutes = require('../cartRoutes');
+const subCategoryRoutes = require('../subCategoryRoutes');
+const filterRoutes = require('../filterRoutes');
 
 router.use('/auth', authRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/products', require('../productRoutes'));
 router.use('/categories', require('../categoryRoutes'));
+router.use('/subcategories', subCategoryRoutes);
+router.use('/filters', filterRoutes);
 router.use('/reviews', reviewStandaloneRoutes);
 router.use('/checkout', checkoutRoutes);
 router.use('/cart', cartRoutes);
 router.use('/admin/dashboard', adminDashboardRoutes);
 router.use('/admin/products', adminProductRoutes);
 router.use('/admin/categories', adminCategoryRoutes);
+router.use('/admin/subcategories', adminSubCategoryRoutes);
+router.use('/admin/filters', adminFilterRoutes);
 router.use('/admin/orders', adminOrderRoutes);
 router.use('/admin/customers', adminCustomerRoutes);
 router.use('/admin/reviews', adminReviewRoutes);
@@ -40,3 +48,4 @@ router.use('/admin/analytics', adminAnalyticsRoutes);
 router.use('/admin/settings', adminSettingsRoutes);
 
 module.exports = router;
+

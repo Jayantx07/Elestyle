@@ -29,7 +29,7 @@ exports.updateReviewStatus = async (req, res) => {
     const review = await Review.findByIdAndUpdate(
       req.params.id,
       updateData,
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
 
     if (!review) {

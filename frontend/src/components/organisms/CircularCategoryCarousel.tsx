@@ -38,7 +38,7 @@ export const CircularCategoryCarousel: React.FC<CircularCategoryCarouselProps> =
                   data-cursor-text="VIEW"
                 >
                   <div 
-                    className={`w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden shadow-sm transition-all duration-300 ring-2 ring-offset-4 ring-offset-[var(--bg-page)] transition-shadow ${isActive ? 'ring-[#B89B72]' : 'ring-transparent group-hover:ring-[var(--accent)] group-hover:shadow-md'}`}
+                    className={`w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden shadow-sm transition-all duration-300 ring-2 ring-offset-4 ring-offset-[var(--bg-page)] transition-shadow ${isActive ? 'ring-[#03989E]' : 'ring-transparent group-hover:ring-[var(--accent)] group-hover:shadow-md'}`}
                   >
                     <img
                       src={category.image}
@@ -47,7 +47,7 @@ export const CircularCategoryCarousel: React.FC<CircularCategoryCarouselProps> =
                     />
                   </div>
                   <span
-                    className={`font-sans font-semibold text-[13px] md:text-sm text-center leading-tight transition-colors duration-200 ${isActive ? 'text-[#B89B72]' : ''}`}
+                    className={`font-sans font-semibold text-[13px] md:text-sm text-center leading-tight transition-colors duration-200 ${isActive ? 'text-[#03989E]' : ''}`}
                     style={isActive ? {} : { color: 'var(--text-primary)' }}
                   >
                     {category.name}

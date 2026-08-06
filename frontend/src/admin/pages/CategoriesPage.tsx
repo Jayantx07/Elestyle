@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Plus, Table, Layers } from 'lucide-react';
 import { PageHeader } from '../components/shared/PageHeader';
 import { DataTable, type Column } from '../components/shared/DataTable';
 import { ConfirmModal } from '../components/shared/ConfirmModal';
+import { CatalogTreeView } from '../components/shared/CatalogTreeView';
 import { adminCategoryService, type AdminCategory } from '../services/categoryService';
 
 export default function CategoriesPage() {
@@ -11,6 +12,7 @@ export default function CategoriesPage() {
   const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [viewMode, setViewMode] = useState<'table' | 'tree'>('table');
   
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<AdminCategory | null>(null);
@@ -79,6 +81,11 @@ export default function CategoriesPage() {
     },
     { key: 'description', header: 'Description' },
     {
+      key: 'displayOrder',
+      header: 'Display Order',
+      render: (category) => <span className="font-mono text-sm bg-gray-100 px-2.5 py-1 rounded-md text-gray-700 font-semibold">{category.displayOrder || 0}</span>
+    },
+    {
       key: 'actions',
       header: 'Actions',
       render: (category) => (
@@ -108,9 +115,9 @@ export default function CategoriesPage() {
   );
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
-        title="Categories"
+        title="Catalog Categories"
         actionButton={{
           label: 'Add Category',
           icon: <Plus className="w-4 h-4" />,
@@ -118,16 +125,46 @@ export default function CategoriesPage() {
         }}
       />
 
-      <DataTable
-        data={filteredCategories}
-        columns={columns}
-        keyExtractor={(item) => item._id}
-        isLoading={loading}
-        searchValue={search}
-        onSearchChange={setSearch}
-        searchPlaceholder="Search categories..."
-        onRowClick={(item) => navigate(`/admin/categories/${item._id}`)}
-      />
+      {/* Enterprise View Mode Tabs */}
+      <div className="flex border-b border-gray-200 space-x-4 pb-1">
+        <button
+          onClick={() => setViewMode('table')}
+          className={`flex items-center space-x-2 pb-3 px-3 border-b-2 font-medium text-sm transition-all ${
+            viewMode === 'table'
+              ? 'border-primary text-primary font-bold'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          }`}
+        >
+          <Table className="w-4 h-4" />
+          <span>Table List View</span>
+        </button>
+        <button
+          onClick={() => setViewMode('tree')}
+          className={`flex items-center space-x-2 pb-3 px-3 border-b-2 font-medium text-sm transition-all ${
+            viewMode === 'tree'
+              ? 'border-indigo-600 text-indigo-600 font-bold'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          }`}
+        >
+          <Layers className="w-4 h-4 text-indigo-600" />
+          <span>Hierarchy Tree View (Category → SubCategory → Products)</span>
+        </button>
+      </div>
+
+      {viewMode === 'table' ? (
+        <DataTable
+          data={filteredCategories}
+          columns={columns}
+          keyExtractor={(item) => item._id}
+          isLoading={loading}
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search categories..."
+          onRowClick={(item) => navigate(`/admin/categories/${item._id}`)}
+        />
+      ) : (
+        <CatalogTreeView />
+      )}
 
       <ConfirmModal
         isOpen={deleteModalOpen}

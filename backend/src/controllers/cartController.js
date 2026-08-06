@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
 
@@ -9,15 +10,19 @@ const deduplicateCart = async (cart) => {
   const uniqueItemsMap = {};
   
   for (const item of cart.items) {
-    const pId = item.product.toString();
+    if (!item.product || !mongoose.Types.ObjectId.isValid(String(item.product._id || item.product))) {
+      hasDuplicates = true; // Flag to filter out null or invalid product references
+      continue;
+    }
+    const pId = String(item.product._id || item.product);
     if (uniqueItemsMap[pId]) {
-      uniqueItemsMap[pId].quantity += item.quantity;
+      uniqueItemsMap[pId].quantity += (item.quantity || 1);
       hasDuplicates = true;
     } else {
       uniqueItemsMap[pId] = {
         product: item.product,
-        quantity: item.quantity,
-        price: item.price
+        quantity: item.quantity || 1,
+        price: item.price || 0
       };
     }
   }
@@ -28,6 +33,7 @@ const deduplicateCart = async (cart) => {
   }
   return cart;
 };
+
 
 // @desc    Get user cart
 // @route   GET /api/cart
@@ -70,7 +76,7 @@ exports.addToCart = async (req, res) => {
     let cart = await Cart.findOneAndUpdate(
       { user: req.user._id, 'items.product': productId },
       { $inc: { 'items.$.quantity': quantity || 1 } },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     // Step 2: If it didn't exist in items, try to push to existing cart
@@ -78,7 +84,7 @@ exports.addToCart = async (req, res) => {
       cart = await Cart.findOneAndUpdate(
         { user: req.user._id },
         { $push: { items: { product: productId, quantity: quantity || 1, price: price || product.price } } },
-        { new: true }
+        { returnDocument: 'after' }
       );
     }
 
@@ -95,7 +101,7 @@ exports.addToCart = async (req, res) => {
           cart = await Cart.findOneAndUpdate(
             { user: req.user._id },
             { $push: { items: { product: productId, quantity: quantity || 1, price: price || product.price } } },
-            { new: true }
+            { returnDocument: 'after' }
           );
         } else {
           throw createErr;
@@ -135,7 +141,7 @@ exports.updateCartItem = async (req, res) => {
     // First deduplicate to make index math safe
     cart = await deduplicateCart(cart);
 
-    const itemIndex = cart.items.findIndex(item => item.product.toString() === productId);
+    const itemIndex = cart.items.findIndex(item => item.product && String(item.product._id || item.product) === productId);
 
     if (itemIndex > -1) {
       if (quantity <= 0) {
@@ -173,7 +179,7 @@ exports.removeFromCart = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Cart not found' });
     }
 
-    cart.items = cart.items.filter(item => item.product.toString() !== productId);
+    cart.items = cart.items.filter(item => item.product && String(item.product._id || item.product) !== productId);
     await cart.save();
 
     cart = await Cart.findOne({ user: req.user._id }).populate({
@@ -224,14 +230,20 @@ exports.mergeCart = async (req, res) => {
 
     if (localItems && Array.isArray(localItems) && localItems.length > 0) {
       for (const item of localItems) {
-        const itemIndex = cart.items.findIndex(ci => ci.product.toString() === item.id);
+        const idStr = String(item.id || '');
+        if (!idStr || !mongoose.Types.ObjectId.isValid(idStr)) {
+          console.warn(`[Cart] Skipping merge of non-ObjectId localStorage item: "${idStr}"`);
+          continue;
+        }
+
+        const itemIndex = cart.items.findIndex(ci => ci && ci.product && String(ci.product._id || ci.product) === idStr);
         if (itemIndex > -1) {
           cart.items[itemIndex].quantity += (item.quantity || 1);
         } else {
           cart.items.push({ 
-            product: item.id, 
+            product: idStr, 
             quantity: item.quantity || 1, 
-            price: item.price 
+            price: item.price || 0 
           });
         }
       }
@@ -245,9 +257,16 @@ exports.mergeCart = async (req, res) => {
       select: 'name price images description category slug'
     });
 
+    // Automatically remove cart items where the product was deleted from DB
+    if (cart && cart.items && cart.items.some(i => !i.product)) {
+      cart.items = cart.items.filter(i => i.product);
+      await cart.save();
+    }
+
     res.status(200).json({ success: true, data: cart });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Server Error' });
+    console.error('Cart merge error:', err);
+    res.status(500).json({ success: false, message: 'Server Error during cart merge', error: err.message });
   }
 };
+

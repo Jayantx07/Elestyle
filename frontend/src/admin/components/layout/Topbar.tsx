@@ -1,9 +1,21 @@
-import { Bell, Search, UserCircle } from 'lucide-react';
+import { Bell, Search, UserCircle, Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-export default function Topbar() {
+interface TopbarProps {
+  onOpenSidebar?: () => void;
+}
+
+export default function Topbar({ onOpenSidebar }: TopbarProps) {
   return (
     <header className="sticky top-0 z-10 flex h-16 flex-shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+      <button
+        type="button"
+        onClick={onOpenSidebar}
+        className="-m-2.5 p-2.5 text-gray-700 md:hidden"
+      >
+        <span className="sr-only">Open sidebar</span>
+        <Menu className="h-6 w-6" aria-hidden="true" />
+      </button>
       <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
         <form className="relative flex flex-1" action="#" method="GET">
           <label htmlFor="search-field" className="sr-only">

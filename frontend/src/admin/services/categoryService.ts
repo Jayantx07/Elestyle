@@ -16,6 +16,42 @@ export interface AdminCategory {
   subCategories?: string[];
 }
 
+export interface CatalogTreeProduct {
+  _id: string;
+  name: string;
+  slug: string;
+  price: number;
+  discount?: number;
+  stock?: number;
+  status: string;
+  visibility: string;
+  displayOrder: number;
+  images?: Array<any>;
+}
+
+export interface CatalogTreeSubCategory {
+  _id: string;
+  name: string;
+  slug: string;
+  displayOrder: number;
+  image?: string;
+  icon?: string;
+  productCount: number;
+  products: CatalogTreeProduct[];
+}
+
+export interface CatalogTreeCategory {
+  _id: string;
+  name: string;
+  slug: string;
+  displayOrder: number;
+  image?: string;
+  icon?: string;
+  totalProductCount: number;
+  subCategories: CatalogTreeSubCategory[];
+  directProducts: CatalogTreeProduct[];
+}
+
 export const adminCategoryService = {
   getCategories: async (): Promise<AdminCategory[]> => {
     const res = await fetch('/api/v1/admin/categories', { cache: 'no-store' });
@@ -27,6 +63,13 @@ export const adminCategoryService = {
   getCategoryById: async (id: string): Promise<AdminCategory> => {
     const res = await fetch(`/api/v1/admin/categories/${id}`);
     if (!res.ok) throw new Error('Failed to fetch category');
+    const json = await res.json();
+    return json.data;
+  },
+
+  getCatalogTree: async (): Promise<CatalogTreeCategory[]> => {
+    const res = await fetch('/api/v1/admin/categories/tree', { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to fetch catalog tree hierarchy');
     const json = await res.json();
     return json.data;
   },

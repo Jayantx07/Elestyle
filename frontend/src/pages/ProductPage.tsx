@@ -57,6 +57,7 @@ const ProductPage: React.FC = () => {
             imageSrc: p.images?.[0]?.secure_url || '',
             thumbnails: p.images?.map((img: any) => img.secure_url) || [],
             mainNotes: p.tags || [],
+            variants: (p.variants || []).filter((v: any) => v.isActive !== false),
             ratingAverage: p.ratingAverage || 0,
             reviewCount: p.reviewCount || 0,
             reviews: reviews,

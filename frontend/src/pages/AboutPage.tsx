@@ -185,7 +185,7 @@ const AboutPage: React.FC = () => {
               <Typography variant="h2" className="font-fraunces text-[28px] uppercase tracking-[0.12em] text-[#2c2a28] sm:text-[30px]">
                 Grow Together With ElleStyle
               </Typography>
-              <div className="mt-3 flex items-center justify-center gap-3 text-[#B9985A]" aria-hidden="true">
+              <div className="mt-3 flex items-center justify-center gap-3 text-[#03989E]" aria-hidden="true">
                 <span className="h-px w-14 bg-current/60" />
                 <span className="text-lg">✽</span>
                 <span className="h-px w-14 bg-current/60" />
@@ -201,13 +201,13 @@ const AboutPage: React.FC = () => {
                     key={column.title}
                     className={`flex h-full flex-col items-center px-8 py-10 text-center ${index < communityColumns.length - 1 ? 'border-b border-[#ece1d4] lg:border-b-0 lg:border-r' : ''}`}
                   >
-                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#f4ead9] text-[#B88932] shadow-inner shadow-white/60">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#f4ead9] text-[#03989E] shadow-inner shadow-white/60">
                       <Icon className="h-9 w-9" strokeWidth={1.6} />
                     </div>
                     <h3 className="mt-6 font-fraunces text-[26px] uppercase tracking-[0.08em] text-[#2c2a28] sm:text-[28px]">
                       {column.title}
                     </h3>
-                    <p className="mt-1 font-fraunces italic text-[22px] leading-none text-[#B88932] sm:text-[24px]">
+                    <p className="mt-1 font-fraunces italic text-[22px] leading-none text-[#03989E] sm:text-[24px]">
                       {column.subtitle}
                     </p>
                     <p className="mt-5 max-w-sm text-[14px] leading-7 text-[#59524a]">
@@ -232,7 +232,7 @@ const AboutPage: React.FC = () => {
                 <div className="flex items-center justify-center px-7 py-8 lg:px-10">
                   <a
                     href="#"
-                    className="inline-flex items-center justify-center rounded-full border border-[#B9985A] bg-white px-7 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-[#2c2a28] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#fcf7ee] hover:shadow-[0_8px_20px_rgba(185,152,90,0.18)]"
+                    className="inline-flex items-center justify-center rounded-full border border-[#03989E] bg-white px-7 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-[#2c2a28] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#fcf7ee] hover:shadow-[0_8px_20px_rgba(3,152,158,0.18)]"
                   >
                     Join Now
                   </a>

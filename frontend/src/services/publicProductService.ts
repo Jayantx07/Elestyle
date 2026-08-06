@@ -1,13 +1,34 @@
+export interface ProductVariant {
+  _id?: string;
+  name: string;
+  sku?: string;
+  price?: number;
+  compareAtPrice?: number;
+  stock?: number;
+  colorName?: string;
+  colorHex?: string;
+  material?: string;
+  image?: string;
+  images?: { secure_url: string; public_id?: string; isPrimary?: boolean }[];
+  sizes?: string[];
+  isAvailable?: boolean;
+  isActive?: boolean;
+  displayOrder?: number;
+}
+
 export interface PublicProduct {
   _id: string;
   name: string;
   description?: string;
   slug: string;
   category: any;
-  subCategory?: string;
+  subCategory?: any;
   price: number;
   compareAtPrice?: number;
   discount: number;
+  variants?: ProductVariant[];
+  colors?: { name: string; hex: string }[];
+  material?: string;
   ratingAverage: number;
   reviewCount: number;
   images: { secure_url: string; alt?: string; isFeatured: boolean }[];
@@ -77,10 +98,20 @@ export const publicProductService = {
     return res.json();
   },
 
-  getProductsByCategorySlug: async (slug: string): Promise<PaginatedResponse<PublicProduct>> => {
-    const res = await fetch(`/api/v1/categories/${slug}/products`);
+  getProductsByCategorySlug: async (slug: string, queryString: string = ''): Promise<PaginatedResponse<PublicProduct>> => {
+    const url = `/api/v1/categories/${slug}/products${queryString ? (queryString.startsWith('?') ? queryString : `?${queryString}`) : ''}`;
+    const res = await fetch(url);
     if (!res.ok) throw new Error('Failed to fetch products for category');
     return res.json();
+  },
+
+  getProductFacets: async (categorySlug?: string, queryString?: string) => {
+    const params = new URLSearchParams(queryString || '');
+    if (categorySlug && !params.has('category')) params.append('category', categorySlug);
+    const res = await fetch(`/api/v1/products/facets?${params.toString()}`);
+    if (!res.ok) throw new Error('Failed to fetch product facet aggregations');
+    const json = await res.json();
+    return json.data || {};
   },
 
   getProductReviews: async (productId: string) => {

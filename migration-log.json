@@ -1,0 +1,60 @@
+{
+  "timestamp": "2026-08-05T07:34:50.193Z",
+  "strategy": "Expand -> Migrate -> Switch -> Contract",
+  "summary": {
+    "categoriesProcessed": 5,
+    "subCategoriesCreated": 3,
+    "subCategoriesSkipped": 0,
+    "productsProcessed": 4,
+    "productsMigrated": 0,
+    "productsSkipped": 4,
+    "productsRequiringManualReview": 0,
+    "errorsCount": 0
+  },
+  "Migrated": [],
+  "Skipped": [
+    {
+      "type": "NoSubCategoryToMigrate",
+      "productId": "6a63434a6081d0dc2d8ed54b",
+      "name": "Vanity Bag"
+    },
+    {
+      "type": "NoSubCategoryToMigrate",
+      "productId": "6a6348396081d0dc2d8ed580",
+      "name": "Pearl Necklace"
+    },
+    {
+      "type": "NoSubCategoryToMigrate",
+      "productId": "6a689608ab0c7e8cc36965c6",
+      "name": "Boho Macrame Bag"
+    },
+    {
+      "type": "NoSubCategoryToMigrate",
+      "productId": "6a6b2b43d33d314020747bda",
+      "name": "Necklace"
+    }
+  ],
+  "Errors": [],
+  "Mapped": [
+    {
+      "type": "SubCategoryCreated",
+      "name": "Rajasthani Banjara Bags",
+      "slug": "rajasthani-banjara-bags",
+      "parentCategory": "Macramé Collection"
+    },
+    {
+      "type": "SubCategoryCreated",
+      "name": "Macrame Bags",
+      "slug": "macrame-bags",
+      "parentCategory": "Macramé Collection"
+    },
+    {
+      "type": "SubCategoryCreated",
+      "name": "Tote Bags",
+      "slug": "tote-bags",
+      "parentCategory": "Macramé Collection"
+    }
+  ],
+  "Broken": [],
+  "ManualReview": []
+}

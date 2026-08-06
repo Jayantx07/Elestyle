@@ -94,7 +94,7 @@ exports.voteReview = async (req, res) => {
 
     const update = type === 'like' ? { $inc: { likes: 1 } } : { $inc: { dislikes: 1 } };
     
-    const review = await Review.findByIdAndUpdate(id, update, { new: true });
+    const review = await Review.findByIdAndUpdate(id, update, { returnDocument: 'after' });
     
     if (!review) {
       return res.status(404).json({ success: false, message: 'Review not found' });

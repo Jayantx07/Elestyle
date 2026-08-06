@@ -11,8 +11,9 @@ export interface ImageMetadata {
 }
 
 interface ImageUploadProps {
-  images: ImageMetadata[];
-  onChange: (images: ImageMetadata[]) => void;
+  images?: ImageMetadata[];
+  onChange?: (images: ImageMetadata[]) => void;
+  onImagesChange?: (images: ImageMetadata[]) => void;
   maxImages?: number;
   category?: string;
   productSlug?: string;
@@ -45,14 +46,20 @@ function StatusBadge({ className, children }: { className: string; children: Rea
 }
 
 export function ImageUpload({
-  images,
+  images = [],
   onChange,
+  onImagesChange,
   maxImages = 10,
-  category: _category,
-  productSlug: _productSlug,
+  category,
+  productSlug,
 }: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImagesUpdate = (newImages: ImageMetadata[]) => {
+    if (typeof onChange === 'function') onChange(newImages);
+    if (typeof onImagesChange === 'function') onImagesChange(newImages);
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -68,6 +75,16 @@ export function ImageUpload({
     const newFiles = Array.from(files).filter((file) => ACCEPTED_IMAGE_TYPES.includes(file.type));
 
     if (newFiles.length === 0) return;
+
+    if (maxImages === 1) {
+      const singleMeta: ImageMetadata = {
+        file: newFiles[0],
+        previewUrl: URL.createObjectURL(newFiles[0]),
+        isFeatured: true,
+      };
+      handleImagesUpdate([singleMeta]);
+      return;
+    }
 
     if (images.length + newFiles.length > maxImages) {
       alert(`You can only upload a maximum of ${maxImages} images.`);
@@ -85,7 +102,7 @@ export function ImageUpload({
       newImageMetas[0].isFeatured = true;
     }
 
-    onChange([...images, ...newImageMetas]);
+    handleImagesUpdate([...images, ...newImageMetas]);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -117,7 +134,7 @@ export function ImageUpload({
       newImages[0].isFeatured = true;
     }
 
-    onChange(newImages);
+    handleImagesUpdate(newImages);
   };
 
   const setFeatured = (index: number) => {
@@ -125,7 +142,7 @@ export function ImageUpload({
       ...img,
       isFeatured: i === index,
     }));
-    onChange(newImages);
+    handleImagesUpdate(newImages);
   };
 
   const moveImage = (index: number, direction: 'left' | 'right') => {
@@ -141,16 +158,66 @@ export function ImageUpload({
     
     [newImages[index], newImages[swapIndex]] = [newImages[swapIndex], newImages[index]];
     
-    onChange(newImages);
+    handleImagesUpdate(newImages);
   };
+
+  if (maxImages === 1 && images.length > 0) {
+    const img = images[0];
+    return (
+      <div className="w-full">
+        <div className="relative group w-full h-48 rounded-lg overflow-hidden border border-[#E2D8C9] bg-[#FAF8F5] shadow-xs flex items-center justify-center">
+          <img
+            src={img.secure_url || img.previewUrl}
+            alt="Uploaded asset"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-between p-3">
+            <div className="flex justify-end">
+              <OverlayButton
+                title="Remove Image"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeImage(0);
+                }}
+                className="p-1.5 rounded-full bg-red-600/90 text-white hover:bg-red-700 shadow-md backdrop-blur-xs transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </OverlayButton>
+            </div>
+            <div className="flex items-center justify-center pb-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="px-3.5 py-1.5 bg-white/95 hover:bg-white text-gray-900 text-xs font-bold rounded-full shadow-md uppercase tracking-wider transition-all duration-200 transform hover:-translate-y-0.5"
+              >
+                Change Image
+              </button>
+            </div>
+          </div>
+          {img.isUploading && (
+            <StatusBadge className="absolute bottom-0 inset-x-0 bg-[#03989E]/90 text-white text-[10px] font-bold px-2 py-1 text-center uppercase tracking-wider">
+              Uploading...
+            </StatusBadge>
+          )}
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          accept="image/png, image/jpeg, image/webp"
+          onChange={handleFileInput}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
       <div
         className={`relative flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
           isDragging
-            ? 'border-primary bg-primary/5'
-            : 'border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400'
+            ? 'border-[#03989E] bg-[#03989E]/5'
+            : 'border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-[#03989E]'
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -168,26 +235,28 @@ export function ImageUpload({
           ref={fileInputRef}
           type="file"
           className="hidden"
-          multiple
+          multiple={maxImages > 1}
           accept="image/png, image/jpeg, image/webp"
           onChange={handleFileInput}
         />
       </div>
 
       {images.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
           {images.map((img, index) => (
             <div
-              key={img.public_id || img.previewUrl}
-              className={`relative group rounded-lg overflow-hidden border-2 transition-all ${
-                img.isFeatured ? 'border-primary shadow-md ring-2 ring-primary/20' : 'border-gray-200'
+              key={img.public_id || img.previewUrl || index}
+              className={`relative group rounded-lg overflow-hidden border transition-all ${
+                img.isFeatured ? 'border-[#03989E] shadow-md ring-2 ring-[#03989E]/20' : 'border-gray-200'
               }`}
             >
-              <img
-                src={img.secure_url || img.previewUrl}
-                alt={`Upload preview ${index}`}
-                className="w-full h-32 object-cover"
-              />
+              <div className="aspect-[4/3] w-full overflow-hidden bg-gray-100">
+                <img
+                  src={img.secure_url || img.previewUrl}
+                  alt={`Upload preview ${index}`}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              </div>
               
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
                 <div className="flex justify-between">
@@ -197,8 +266,8 @@ export function ImageUpload({
                       e.stopPropagation();
                       setFeatured(index);
                     }}
-                    className={`p-1.5 rounded-full backdrop-blur-sm transition-colors ${
-                      img.isFeatured ? 'bg-primary text-white' : 'bg-white/20 text-white hover:bg-white/40'
+                    className={`p-1.5 rounded-full backdrop-blur-xs transition-colors ${
+                      img.isFeatured ? 'bg-[#03989E] text-white' : 'bg-white/20 text-white hover:bg-white/40'
                     }`}
                   >
                     <Star className="w-4 h-4" fill={img.isFeatured ? 'currentColor' : 'none'} />
@@ -210,7 +279,7 @@ export function ImageUpload({
                       e.stopPropagation();
                       removeImage(index);
                     }}
-                    className="p-1.5 rounded-full bg-red-500/80 text-white hover:bg-red-600 backdrop-blur-sm transition-colors"
+                    className="p-1.5 rounded-full bg-red-600/90 text-white hover:bg-red-600 backdrop-blur-xs transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </OverlayButton>
@@ -244,12 +313,12 @@ export function ImageUpload({
 
               <div className="absolute bottom-0 inset-x-0 flex flex-col pointer-events-none">
                 {img.isFeatured && (
-                  <StatusBadge className="bg-primary text-white text-[10px] font-bold px-2 py-1 uppercase text-center w-full">
+                  <StatusBadge className="bg-[#03989E] text-white text-[10px] font-bold px-2 py-1 uppercase text-center w-full">
                     Featured
                   </StatusBadge>
                 )}
                 {img.isUploading && (
-                  <StatusBadge className="bg-blue-500/80 text-white text-[10px] font-bold px-2 py-1 text-center w-full">
+                  <StatusBadge className="bg-[#03989E]/80 text-white text-[10px] font-bold px-2 py-1 text-center w-full">
                     Uploading...
                   </StatusBadge>
                 )}
