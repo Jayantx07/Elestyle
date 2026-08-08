@@ -1,3 +1,4 @@
+import { apiClient } from '@/lib/apiClient';
 import { useEffect, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import type { SearchResult } from '../lib/search/types';

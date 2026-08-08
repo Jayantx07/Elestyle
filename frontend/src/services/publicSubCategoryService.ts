@@ -1,3 +1,4 @@
+import { apiClient } from '@/lib/apiClient';
 export interface PublicSubCategory {
   _id: string;
   name: string;
@@ -22,16 +23,14 @@ export const publicSubCategoryService = {
     if (params.carousel) query.append('carousel', 'true');
     if (params.navbar) query.append('navbar', 'true');
 
-    const res = await fetch(`/api/v1/subcategories?${query.toString()}`);
-    if (!res.ok) throw new Error('Failed to fetch public subcategories');
-    const json = await res.json();
+    const res = await apiClient(`/api/v1/subcategories?${query.toString()}`);
+    const json = res;
     return json.data || [];
   },
 
   getSubCategoryBySlug: async (slug: string): Promise<PublicSubCategory> => {
-    const res = await fetch(`/api/v1/subcategories/${slug}`);
-    if (!res.ok) throw new Error('Failed to fetch subcategory details');
-    const json = await res.json();
+    const res = await apiClient(`/api/v1/subcategories/${slug}`);
+    const json = res;
     return json.data;
   },
 };

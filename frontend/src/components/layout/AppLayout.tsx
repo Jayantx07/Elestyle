@@ -10,7 +10,7 @@ export default function AppLayout() {
   // (CategoryPage's ThemeProvider handles setting it for category routes,
   //  and cleans up on unmount — this is a safety guard for SSR/edge cases)
   useEffect(() => {
-    if (!location.pathname.startsWith('/shop/')) {
+    if (!location.pathname.startsWith('/category/')) {
       document.documentElement.removeAttribute('data-category');
     }
   }, [location.pathname]);

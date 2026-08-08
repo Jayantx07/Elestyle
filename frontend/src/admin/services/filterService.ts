@@ -1,3 +1,4 @@
+import { apiClient } from '@/lib/apiClient';
 export interface AdminFilterConfiguration {
   _id: string;
   name: string;
@@ -19,55 +20,49 @@ export interface AdminFilterConfiguration {
 export const adminFilterService = {
   getFilters: async (category?: string): Promise<AdminFilterConfiguration[]> => {
     const url = category ? `/api/v1/admin/filters?category=${category}` : '/api/v1/admin/filters';
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('Failed to fetch filters');
-    const data = await response.json();
+    const response = await apiClient(url);
+    const data = response;
     return data.data || [];
   },
 
   getFilterById: async (id: string): Promise<AdminFilterConfiguration> => {
-    const response = await fetch(`/api/v1/admin/filters/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch filter');
-    const data = await response.json();
+    const response = await apiClient(`/api/v1/admin/filters/${id}`);
+    const data = response;
     return data.data;
   },
 
   createFilter: async (payload: Partial<AdminFilterConfiguration>): Promise<AdminFilterConfiguration> => {
-    const response = await fetch('/api/v1/admin/filters', {
+    const response = await apiClient('/api/v1/admin/filters', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Failed to create filter');
+    const data = response;
     return data.data;
   },
 
   updateFilter: async (id: string, payload: Partial<AdminFilterConfiguration>): Promise<AdminFilterConfiguration> => {
-    const response = await fetch(`/api/v1/admin/filters/${id}`, {
+    const response = await apiClient(`/api/v1/admin/filters/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Failed to update filter');
+    const data = response;
     return data.data;
   },
 
   deleteFilter: async (id: string): Promise<void> => {
-    const response = await fetch(`/api/v1/admin/filters/${id}`, {
+    const response = await apiClient(`/api/v1/admin/filters/${id}`, {
       method: 'DELETE',
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Failed to delete filter');
+    const data = response;
   },
 
   reorderFilters: async (items: { _id: string; displayOrder: number }[]): Promise<void> => {
-    const response = await fetch('/api/v1/admin/filters/reorder', {
+    const response = await apiClient('/api/v1/admin/filters/reorder', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ items }),
     });
-    if (!response.ok) throw new Error('Failed to reorder filters');
   },
 };

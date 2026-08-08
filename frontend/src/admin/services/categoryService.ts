@@ -52,63 +52,45 @@ export interface CatalogTreeCategory {
   directProducts: CatalogTreeProduct[];
 }
 
+import { apiClient } from '@/lib/apiClient';
+
 export const adminCategoryService = {
   getCategories: async (): Promise<AdminCategory[]> => {
-    const res = await fetch('/api/v1/admin/categories', { cache: 'no-store' });
-    if (!res.ok) throw new Error('Failed to fetch categories');
-    const json = await res.json();
-    return json.data;
+    const data = await apiClient<{ data: AdminCategory[] }>('/api/v1/admin/categories');
+    return data.data || [];
   },
   
   getCategoryById: async (id: string): Promise<AdminCategory> => {
-    const res = await fetch(`/api/v1/admin/categories/${id}`);
-    if (!res.ok) throw new Error('Failed to fetch category');
-    const json = await res.json();
-    return json.data;
+    const data = await apiClient<{ data: AdminCategory }>(`/api/v1/admin/categories/${id}`);
+    return data.data;
   },
 
   getCatalogTree: async (): Promise<CatalogTreeCategory[]> => {
-    const res = await fetch('/api/v1/admin/categories/tree', { cache: 'no-store' });
-    if (!res.ok) throw new Error('Failed to fetch catalog tree hierarchy');
-    const json = await res.json();
-    return json.data;
+    const data = await apiClient<{ data: CatalogTreeCategory[] }>('/api/v1/admin/categories/tree');
+    return data.data || [];
   },
 
   createCategory: async (categoryData: Partial<AdminCategory>): Promise<AdminCategory> => {
-    const res = await fetch('/api/v1/admin/categories', {
+    const data = await apiClient<{ data: AdminCategory }>('/api/v1/admin/categories', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(categoryData)
     });
-    if (!res.ok) throw new Error('Failed to create category');
-    const json = await res.json();
-    return json.data;
+    return data.data;
   },
 
   updateCategory: async (id: string, categoryData: Partial<AdminCategory>): Promise<AdminCategory> => {
-    const res = await fetch(`/api/v1/admin/categories/${id}`, {
+    const data = await apiClient<{ data: AdminCategory }>(`/api/v1/admin/categories/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(categoryData)
     });
-    if (!res.ok) throw new Error('Failed to update category');
-    const json = await res.json();
-    return json.data;
+    return data.data;
   },
 
   deleteCategory: async (id: string): Promise<void> => {
-    const res = await fetch(`/api/v1/admin/categories/${id}`, {
+    await apiClient(`/api/v1/admin/categories/${id}`, {
       method: 'DELETE'
     });
-    if (!res.ok) {
-      let errorMessage = 'Failed to delete category';
-      try {
-        const json = await res.json();
-        if (json.message) errorMessage = json.message;
-      } catch (e) {
-        // Ignore json parse errors
-      }
-      throw new Error(errorMessage);
-    }
   }
 };

@@ -1,3 +1,4 @@
+import { apiClient } from '@/lib/apiClient';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Typography } from '../components/atoms/Typography';
@@ -136,7 +137,7 @@ export default function CheckoutPage() {
     const billing = sameAsShipping ? shippingAddress : billingAddress;
 
     try {
-      const response = await fetch('/api/v1/checkout/process', {
+      const response = await apiClient('/api/v1/checkout/process', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -150,7 +151,7 @@ export default function CheckoutPage() {
         })
       });
 
-      const data = await response.json();
+      const data = response;
       
       if (data.success) {
         if (isTempSession) {

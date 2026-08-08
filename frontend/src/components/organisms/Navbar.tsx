@@ -36,41 +36,41 @@ const MAIN_NAV_LINKS = [
 const CATEGORY_GROUPS: CategoryGroup[] = [
   {
     label: 'Royal Rajasthani Living',
-    href: '/shop/royal-rajasthani-living',
+    href: '/category/royal-rajasthani-living',
     subcategories: [
-      { label: 'Handcrafted cushion covers', href: '/shop/handcrafted-cushion-covers' },
-      { label: 'Round table mats', href: '/shop/round-table-mats' },
-      { label: 'Patchwork runners', href: '/shop/patchwork-runners' },
-      { label: 'Patchwork runners & mat set', href: '/shop/patchwork-runners-and-mat-set' },
+      { label: 'Handcrafted cushion covers', href: '/category/royal-rajasthani-living/handcrafted-cushion-covers' },
+      { label: 'Round table mats', href: '/category/royal-rajasthani-living/round-table-mats' },
+      { label: 'Patchwork runners', href: '/category/royal-rajasthani-living/patchwork-runners' },
+      { label: 'Patchwork runners & mat set', href: '/category/royal-rajasthani-living/patchwork-runners-and-mat-set' },
     ],
   },
   {
     label: 'Bag Collection',
-    href: '/shop/bag-collection',
+    href: '/category/bag-collection',
     subcategories: [
-      { label: 'Handcrafted Banjara Boko bags', href: '/shop/handcrafted-banjara-boko-bags' },
-      { label: 'Handcrafted Banjara Zari bag', href: '/shop/handcrafted-banjara-zari-bag' },
-      { label: 'Ethnic patchwork colorful clutch bags', href: '/shop/ethnic-patchwork-colorful-clutch-bags' },
-      { label: 'Matka Banjara bags', href: '/shop/matka-banjara-bags' },
-      { label: 'Macrame bags', href: '/shop/macrame-bags' },
+      { label: 'Handcrafted Banjara Boko bags', href: '/category/bag-collection/handcrafted-banjara-boko-bags' },
+      { label: 'Handcrafted Banjara Zari bag', href: '/category/bag-collection/handcrafted-banjara-zari-bag' },
+      { label: 'Ethnic patchwork colorful clutch bags', href: '/category/bag-collection/ethnic-patchwork-colorful-clutch-bags' },
+      { label: 'Matka Banjara bags', href: '/category/bag-collection/matka-banjara-bags' },
+      { label: 'Macrame bags', href: '/category/bag-collection/macrame-bags' },
     ],
   },
   {
     label: 'Jewelry Collection',
-    href: '/shop/jewelry-collection',
+    href: '/category/jewelry-collection',
     subcategories: [
-      { label: 'Handmade earrings', href: '/shop/handmade-earrings' },
-      { label: 'Rajasthani earrings', href: '/shop/rajasthani-earrings' },
-      { label: 'Floral thread jewelry', href: '/shop/floral-thread-jewelry' },
+      { label: 'Handmade earrings', href: '/category/jewelry-collection/handmade-earrings' },
+      { label: 'Rajasthani earrings', href: '/category/jewelry-collection/rajasthani-earrings' },
+      { label: 'Floral thread jewelry', href: '/category/jewelry-collection/floral-thread-jewelry' },
     ],
   },
   {
     label: 'Artisans Candles',
-    href: '/shop/artisans-candles',
+    href: '/category/artisans-candles',
   },
   {
     label: 'Wedding Collections',
-    href: '/shop/wedding-collections',
+    href: '/category/wedding-collections',
   },
 ];
 
@@ -160,7 +160,7 @@ export const Navbar: React.FC = () => {
     setIsSearchOpen(false);
   }, [location.pathname]);
 
-  const isShopSectionActive = location.pathname.startsWith('/shop/');
+  const isShopSectionActive = location.pathname.startsWith('/category/');
   const isCategoriesPageActive = location.pathname === '/categories';
 
   return (

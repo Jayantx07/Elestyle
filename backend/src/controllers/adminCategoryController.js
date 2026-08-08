@@ -4,6 +4,7 @@ const SubCategory = require('../models/SubCategory');
 const Product = require('../models/Product');
 const cacheManager = require('../utils/cacheManager');
 const cloudinaryCleanup = require('../utils/cloudinaryCleanup');
+const eventService = require('../services/eventService');
 
 exports.getCategories = async (req, res) => {
   try {
@@ -80,6 +81,7 @@ exports.createCategory = async (req, res) => {
   try {
     const category = await Category.create(req.body);
     await cacheManager.clearPattern('categories');
+    eventService.dispatchInvalidation('catalog', 'category', category._id);
     res.status(201).json({ success: true, data: category, message: 'Category created successfully' });
   } catch (error) {
     res.status(400).json({ success: false, message: 'Bad request', error: error.message });
@@ -107,6 +109,7 @@ exports.updateCategory = async (req, res) => {
     await cloudinaryCleanup.cleanupReplacedImages(oldAssets, newAssets);
 
     await cacheManager.clearPattern('categories');
+    eventService.dispatchInvalidation('catalog', 'category', category._id);
     res.status(200).json({ success: true, data: category, message: 'Category updated successfully' });
   } catch (error) {
     console.error('Update Category error:', error);
@@ -170,6 +173,9 @@ exports.deleteCategory = async (req, res) => {
 
     await cacheManager.clearPattern('categories');
     await cacheManager.clearPattern('subcategories');
+    eventService.dispatchInvalidation('catalog', 'category', req.params.id);
+    // Subcategories were also deleted atomically, notify clients
+    eventService.dispatchInvalidation('catalog', 'subcategory');
 
     res.status(200).json({ success: true, message: 'Category and child subcategories deleted safely via transaction' });
   } catch (error) {

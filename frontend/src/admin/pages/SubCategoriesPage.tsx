@@ -7,40 +7,30 @@ import { ConfirmModal } from '../components/shared/ConfirmModal';
 import { adminSubCategoryService, type AdminSubCategory } from '../services/subCategoryService';
 import { adminCategoryService, type AdminCategory } from '../services/categoryService';
 import toast from 'react-hot-toast';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient } from '@/lib/queryClient';
+import { categoryKeys, subCategoryKeys } from '@/lib/queryKeys';
 
 export default function SubCategoriesPage() {
   const navigate = useNavigate();
-  const [subCategories, setSubCategories] = useState<AdminSubCategory[]>([]);
-  const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<AdminSubCategory | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const fetchSubCategories = async () => {
-    try {
-      setLoading(true);
-      const [subsData, catsData] = await Promise.all([
-        adminSubCategoryService.getSubCategories(),
-        adminCategoryService.getCategories(),
-      ]);
-      setSubCategories(subsData);
-      setCategories(catsData);
-    } catch (error) {
-      console.error('Failed to fetch subcategories', error);
-      toast.error('Failed to load subcategories');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: subCategories = [], isLoading: subsLoading } = useQuery({
+    queryKey: subCategoryKeys.all,
+    queryFn: () => adminSubCategoryService.getSubCategories(),
+  });
 
-  useEffect(() => {
-    fetchSubCategories();
-  }, []);
+  const { data: categories = [], isLoading: catsLoading } = useQuery({
+    queryKey: categoryKeys.all,
+    queryFn: () => adminCategoryService.getCategories(),
+  });
+
+  const loading = subsLoading || catsLoading;
 
   const handleDeleteClick = (e: React.MouseEvent, item: AdminSubCategory) => {
     e.stopPropagation();
@@ -48,49 +38,80 @@ export default function SubCategoriesPage() {
     setDeleteError(null);
     setDeleteModalOpen(true);
   };
-
-  const confirmDelete = async () => {
-    if (!itemToDelete) return;
-    try {
-      setIsDeleting(true);
-      setDeleteError(null);
-      await adminSubCategoryService.deleteSubCategory(itemToDelete._id);
-      setSubCategories(subCategories.filter(c => c._id !== itemToDelete._id));
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => adminSubCategoryService.deleteSubCategory(id),
+    onMutate: async (deletedId) => {
+      await queryClient.cancelQueries({ queryKey: subCategoryKeys.all });
+      const previousSubs = queryClient.getQueryData<AdminSubCategory[]>(subCategoryKeys.all);
+      queryClient.setQueryData<AdminSubCategory[]>(subCategoryKeys.all, (old) => 
+        old ? old.filter(c => c._id !== deletedId) : []
+      );
       setDeleteModalOpen(false);
       setItemToDelete(null);
-      toast.success('SubCategory deleted successfully');
-    } catch (error: any) {
-      console.error('Failed to delete subcategory', error);
+      return { previousSubs };
+    },
+    onError: (error: any, _, context) => {
+      if (context?.previousSubs) {
+        queryClient.setQueryData(subCategoryKeys.all, context.previousSubs);
+      }
       setDeleteError(error.message || 'Failed to delete subcategory');
-    } finally {
-      setIsDeleting(false);
-    }
+      toast.error('Failed to delete subcategory');
+    },
+    onSuccess: () => toast.success('SubCategory deleted successfully'),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: subCategoryKeys.all }),
+  });
+
+  const confirmDelete = () => {
+    if (itemToDelete) deleteMutation.mutate(itemToDelete._id);
   };
 
-  const handleReorder = async (e: React.MouseEvent, index: number, direction: 'up' | 'down') => {
+  const reorderMutation = useMutation({
+    mutationFn: (reorderPayload: any[]) => adminSubCategoryService.reorderSubCategories(reorderPayload),
+    onMutate: async (reorderPayload) => {
+      await queryClient.cancelQueries({ queryKey: subCategoryKeys.all });
+      const previousSubs = queryClient.getQueryData<AdminSubCategory[]>(subCategoryKeys.all);
+      // We already did the optimistic update in handleReorder, so we don't need to do it here again.
+      return { previousSubs };
+    },
+    onError: (error, _, context) => {
+      if (context?.previousSubs) queryClient.setQueryData(subCategoryKeys.all, context.previousSubs);
+      toast.error('Failed to save order');
+    },
+    onSuccess: () => toast.success('Display order updated!'),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: subCategoryKeys.all }),
+  });
+
+  const debounceTimer = React.useRef<NodeJS.Timeout>();
+
+  const handleReorder = (e: React.MouseEvent, index: number, direction: 'up' | 'down') => {
     e.stopPropagation();
     if ((direction === 'up' && index === 0) || (direction === 'down' && index === subCategories.length - 1)) return;
 
     const newIndex = direction === 'up' ? index - 1 : index + 1;
-    const updated = [...subCategories];
-    const temp = updated[index];
-    updated[index] = updated[newIndex];
-    updated[newIndex] = temp;
-
-    // Assign new sequential displayOrder
-    const reorderPayload = updated.map((item, i) => {
-      item.displayOrder = i;
-      return { _id: item._id, displayOrder: i };
+    
+    // 1. Optimistic Update Immediately
+    queryClient.setQueryData<AdminSubCategory[]>(subCategoryKeys.all, (old) => {
+      if (!old) return [];
+      const updated = [...old];
+      const temp = updated[index];
+      updated[index] = updated[newIndex];
+      updated[newIndex] = temp;
+      return updated;
     });
 
-    setSubCategories(updated);
-    try {
-      await adminSubCategoryService.reorderSubCategories(reorderPayload);
-      toast.success('Display order updated!');
-    } catch (error) {
-      toast.error('Failed to save order');
-      fetchSubCategories();
-    }
+    // 2. Compute final payload based on the NEW state
+    // We must read it from the optimistic cache or re-compute it
+    const updatedPayload = [...subCategories];
+    const tempPayload = updatedPayload[index];
+    updatedPayload[index] = updatedPayload[newIndex];
+    updatedPayload[newIndex] = tempPayload;
+    const reorderPayload = updatedPayload.map((item, i) => ({ _id: item._id, displayOrder: i }));
+
+    // 3. Debounce the network request
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      reorderMutation.mutate(reorderPayload);
+    }, 1000);
   };
 
   const columns: Column<AdminSubCategory>[] = [
@@ -270,7 +291,7 @@ export default function SubCategoriesPage() {
         onConfirm={confirmDelete}
         onCancel={() => setDeleteModalOpen(false)}
         error={deleteError}
-        isLoading={isDeleting}
+        isLoading={deleteMutation.isPending}
       />
     </div>
   );

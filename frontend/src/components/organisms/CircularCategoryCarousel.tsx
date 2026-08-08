@@ -1,3 +1,4 @@
+import { apiClient } from '@/lib/apiClient';
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchPublicCategories, type Category } from '../../services/publicCategoryService';
@@ -31,7 +32,7 @@ export const CircularCategoryCarousel: React.FC<CircularCategoryCarouselProps> =
             return (
               <React.Fragment key={category._id}>
                 <Link
-                  to={`/shop/${category.slug}`}
+                  to={`/category/${category.slug}`}
                   className="flex flex-col items-center gap-4 group shrink-0 w-28 md:w-36 px-2"
                   aria-label={`Browse ${category.name}`}
                   data-cursor="explore"

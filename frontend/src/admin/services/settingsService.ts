@@ -1,3 +1,4 @@
+import { apiClient } from '@/lib/apiClient';
 export interface AdminSettings {
   storeName: string;
   contactEmail: string;
@@ -11,20 +12,18 @@ export interface AdminSettings {
 
 export const adminSettingsService = {
   getSettings: async (): Promise<AdminSettings> => {
-    const res = await fetch('/api/v1/admin/settings');
-    if (!res.ok) throw new Error('Failed to fetch settings');
-    const json = await res.json();
+    const res = await apiClient('/api/v1/admin/settings');
+    const json = res;
     return json.data;
   },
 
   updateSettings: async (settingsData: AdminSettings): Promise<AdminSettings> => {
-    const res = await fetch('/api/v1/admin/settings', {
+    const res = await apiClient('/api/v1/admin/settings', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(settingsData)
     });
-    if (!res.ok) throw new Error('Failed to update settings');
-    const json = await res.json();
+    const json = res;
     return json.data;
   }
 };

@@ -1,3 +1,4 @@
+import { apiClient } from '@/lib/apiClient';
 export interface AdminAnalytics {
   revenueByMonth: Array<{
     month: string;
@@ -17,9 +18,8 @@ export interface AdminAnalytics {
 
 export const adminAnalyticsService = {
   getAnalytics: async (): Promise<AdminAnalytics> => {
-    const res = await fetch('/api/v1/admin/analytics');
-    if (!res.ok) throw new Error('Failed to fetch analytics');
-    const json = await res.json();
+    const res = await apiClient('/api/v1/admin/analytics');
+    const json = res;
     return json.data;
   }
 };

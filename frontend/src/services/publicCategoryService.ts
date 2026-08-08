@@ -1,3 +1,4 @@
+import { apiClient } from '@/lib/apiClient';
 export interface Category {
   _id: string;
   name: string;
@@ -28,11 +29,8 @@ export const fetchPublicCategories = async (params: { navbar?: boolean, homepage
     const queryString = queryParams.toString();
     const url = `/api/v1/categories${queryString ? `?${queryString}` : ''}`;
 
-    const response = await fetch(url, { cache: 'no-store' });
-    if (!response.ok) {
-      throw new Error(`Error fetching categories: ${response.statusText}`);
-    }
-    const result = await response.json();
+    const response = await apiClient(url, { cache: 'no-store' });
+    const result = response;
     return result.data || [];
   } catch (error) {
     console.error('Failed to fetch public categories:', error);

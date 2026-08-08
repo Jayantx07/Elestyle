@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
 
-router.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', message: 'API is running' });
-});
+const healthRoutes = require('../healthRoutes');
+const eventRoutes = require('../eventRoutes');
+
+router.use('/health', healthRoutes);
+router.use('/events', eventRoutes);
 
 const uploadRoutes = require('../uploadRoutes');
 const adminDashboardRoutes = require('../adminDashboardRoutes');

@@ -6,6 +6,7 @@ import { ImageUpload, type ImageMetadata } from '../components/shared/ImageUploa
 import { adminProductService, type AdminProduct, type ProductVariant } from '../services/productService';
 import { adminCategoryService } from '../services/categoryService';
 import { adminSubCategoryService, type AdminSubCategory } from '../services/subCategoryService';
+import { apiClient } from '@/lib/apiClient';
 import { Plus, Trash2, Layers, Palette, ShieldCheck, DollarSign, Package, FileText, Globe, GitBranch, Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -220,13 +221,11 @@ export default function ProductFormPage() {
         data.append('productSlug', (formData.slug || 'option') + `-var-${variantIdx}-${Date.now()}-${i}`);
         data.append('images', files[i]);
 
-        const res = await fetch('/api/v1/upload', {
+        const result = await apiClient('/api/v1/upload', {
           method: 'POST',
           body: data,
         });
 
-        if (!res.ok) throw new Error('Failed to upload image');
-        const result = await res.json();
         if (result.data && result.data[0]) {
           uploadedImages.push({
             secure_url: result.data[0].secure_url,
@@ -320,9 +319,7 @@ export default function ProductFormPage() {
       if (img.file) data.append('images', img.file);
     });
 
-    const res = await fetch('/api/v1/upload', { method: 'POST', body: data });
-    if (!res.ok) throw new Error('Failed to upload media images');
-    const result = await res.json();
+    const result = await apiClient('/api/v1/upload', { method: 'POST', body: data });
     const uploadedMeta: any[] = result.data;
 
     let uploadIndex = 0;
@@ -354,6 +351,10 @@ export default function ProductFormPage() {
         images: finalImages,
         schemaVersion: 2,
       };
+      
+      // Cleanup empty object IDs to prevent Mongoose CastErrors
+      if (payload.subCategory === '') delete payload.subCategory;
+      if (payload.category === '') delete payload.category;
 
       if (isEditing && id) {
         await adminProductService.updateProduct(id, payload);

@@ -1,3 +1,4 @@
+import { apiClient } from '@/lib/apiClient';
 import React, { useState } from 'react';
 import { Typography } from '../atoms/Typography';
 
@@ -60,12 +61,12 @@ export const ProductReviewSection: React.FC<ProductReviewSectionProps> = ({ prod
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch(`/api/v1/products/${productId}/reviews`, {
+      const res = await apiClient(`/api/v1/products/${productId}/reviews`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ customerName, customerEmail, rating, comment })
       });
-      const data = await res.json();
+      const data = res;
       if (data.success) {
         setSubmitMessage('Review submitted successfully. It is pending approval.');
         setCustomerName(''); setCustomerEmail(''); setComment(''); setRating(5);

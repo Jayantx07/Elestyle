@@ -38,7 +38,7 @@ export class SearchEngine {
           type: 'CATEGORY' as const,
           title: cat.title,
           image: cat.image,
-          url: `/shop/${cat.slug}`,
+          url: `/category/${cat.slug}`,
           score,
           originalData: cat
         };

@@ -1,3 +1,4 @@
+import { apiClient } from '@/lib/apiClient';
 export interface DashboardStats {
   totalProducts: number;
   totalOrders: number;
@@ -25,11 +26,8 @@ export interface DashboardStats {
 export const adminDashboardService = {
   getStats: async (): Promise<DashboardStats> => {
     try {
-      const response = await fetch('/api/v1/admin/dashboard');
-      if (!response.ok) {
-        throw new Error('Failed to fetch dashboard stats');
-      }
-      const json = await response.json();
+      const response = await apiClient('/api/v1/admin/dashboard');
+      const json = response;
       return json.data;
     } catch (error) {
       console.error('Dashboard service error:', error);

@@ -21,6 +21,8 @@ export interface AdminSubCategory {
   updatedAt?: string;
 }
 
+import { apiClient } from '@/lib/apiClient';
+
 export const adminSubCategoryService = {
   getSubCategories: async (params: { category?: string; search?: string; active?: boolean } = {}): Promise<AdminSubCategory[]> => {
     const query = new URLSearchParams();
@@ -28,55 +30,44 @@ export const adminSubCategoryService = {
     if (params.search) query.append('search', params.search);
     if (params.active !== undefined) query.append('active', String(params.active));
 
-    const response = await fetch(`/api/v1/admin/subcategories?${query.toString()}`);
-    if (!response.ok) throw new Error('Failed to fetch subcategories');
-    const data = await response.json();
+    const data = await apiClient<{ data: AdminSubCategory[] }>(`/api/v1/admin/subcategories?${query.toString()}`);
     return data.data || [];
   },
 
   getSubCategoryById: async (id: string): Promise<AdminSubCategory> => {
-    const response = await fetch(`/api/v1/admin/subcategories/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch subcategory');
-    const data = await response.json();
+    const data = await apiClient<{ data: AdminSubCategory }>(`/api/v1/admin/subcategories/${id}`);
     return data.data;
   },
 
   createSubCategory: async (payload: Partial<AdminSubCategory>): Promise<AdminSubCategory> => {
-    const response = await fetch('/api/v1/admin/subcategories', {
+    const data = await apiClient<{ data: AdminSubCategory }>('/api/v1/admin/subcategories', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Failed to create subcategory');
     return data.data;
   },
 
   updateSubCategory: async (id: string, payload: Partial<AdminSubCategory>): Promise<AdminSubCategory> => {
-    const response = await fetch(`/api/v1/admin/subcategories/${id}`, {
+    const data = await apiClient<{ data: AdminSubCategory }>(`/api/v1/admin/subcategories/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Failed to update subcategory');
     return data.data;
   },
 
   deleteSubCategory: async (id: string): Promise<void> => {
-    const response = await fetch(`/api/v1/admin/subcategories/${id}`, {
+    await apiClient(`/api/v1/admin/subcategories/${id}`, {
       method: 'DELETE',
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Failed to delete subcategory');
   },
 
   reorderSubCategories: async (items: { _id: string; displayOrder: number }[]): Promise<void> => {
-    const response = await fetch('/api/v1/admin/subcategories/reorder', {
+    await apiClient('/api/v1/admin/subcategories/reorder', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ items }),
     });
-    if (!response.ok) throw new Error('Failed to reorder subcategories');
   },
 };

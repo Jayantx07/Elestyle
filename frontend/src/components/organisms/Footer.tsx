@@ -1,3 +1,4 @@
+import { apiClient } from '@/lib/apiClient';
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../atoms/Button';
@@ -63,7 +64,7 @@ export const Footer: React.FC = () => {
                 {categories.slice(0, 5).map((category) => (
                   <li key={category._id}>
                     <Link
-                      to={`/shop/${category.slug}`}
+                      to={`/category/${category.slug}`}
                       className="transition-colors hover:text-[var(--accent)]"
                       style={{ color: 'var(--text-secondary)' }}
                       onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent)')}

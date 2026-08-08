@@ -1,3 +1,4 @@
+import { apiClient } from '@/lib/apiClient';
 export interface ProductVariant {
   _id?: string;
   name: string;
@@ -69,70 +70,60 @@ export const publicProductService = {
     const queryString = queryParams.toString();
     const url = `/api/v1/products${queryString ? `?${queryString}` : ''}`;
 
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Failed to fetch products');
-    return res.json();
+    const res = await apiClient(url);
+    return res;
   },
 
   getProductBySlug: async (slug: string) => {
-    const res = await fetch(`/api/v1/products/${slug}`);
-    if (!res.ok) throw new Error('Failed to fetch product');
-    return res.json();
+    const res = await apiClient(`/api/v1/products/${slug}`);
+    return res;
   },
 
   getFeaturedProducts: async () => {
-    const res = await fetch('/api/v1/products/featured');
-    if (!res.ok) throw new Error('Failed to fetch featured products');
-    return res.json();
+    const res = await apiClient('/api/v1/products/featured');
+    return res;
   },
 
   getLatestProducts: async () => {
-    const res = await fetch('/api/v1/products/latest');
-    if (!res.ok) throw new Error('Failed to fetch latest products');
-    return res.json();
+    const res = await apiClient('/api/v1/products/latest');
+    return res;
   },
 
   getRelatedProducts: async (slug: string) => {
-    const res = await fetch(`/api/v1/products/related/${slug}`);
-    if (!res.ok) throw new Error('Failed to fetch related products');
-    return res.json();
+    const res = await apiClient(`/api/v1/products/related/${slug}`);
+    return res;
   },
 
   getProductsByCategorySlug: async (slug: string, queryString: string = ''): Promise<PaginatedResponse<PublicProduct>> => {
     const url = `/api/v1/categories/${slug}/products${queryString ? (queryString.startsWith('?') ? queryString : `?${queryString}`) : ''}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Failed to fetch products for category');
-    return res.json();
+    const res = await apiClient(url);
+    return res;
   },
 
   getProductFacets: async (categorySlug?: string, queryString?: string) => {
     const params = new URLSearchParams(queryString || '');
     if (categorySlug && !params.has('category')) params.append('category', categorySlug);
-    const res = await fetch(`/api/v1/products/facets?${params.toString()}`);
-    if (!res.ok) throw new Error('Failed to fetch product facet aggregations');
-    const json = await res.json();
+    const res = await apiClient(`/api/v1/products/facets?${params.toString()}`);
+    const json = res;
     return json.data || {};
   },
 
   getProductReviews: async (productId: string) => {
-    const res = await fetch(`/api/v1/products/${productId}/reviews`);
-    if (!res.ok) throw new Error('Failed to fetch reviews');
-    return res.json();
+    const res = await apiClient(`/api/v1/products/${productId}/reviews`);
+    return res;
   },
 
   getHighlightedReviews: async () => {
-    const res = await fetch('/api/v1/reviews/highlighted');
-    if (!res.ok) throw new Error('Failed to fetch highlighted reviews');
-    return res.json();
+    const res = await apiClient('/api/v1/reviews/highlighted');
+    return res;
   },
 
   voteReview: async (reviewId: string, type: 'like' | 'dislike') => {
-    const res = await fetch(`/api/v1/reviews/${reviewId}/vote`, {
+    const res = await apiClient(`/api/v1/reviews/${reviewId}/vote`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type })
     });
-    if (!res.ok) throw new Error('Failed to vote on review');
-    return res.json();
+    return res;
   },
 };

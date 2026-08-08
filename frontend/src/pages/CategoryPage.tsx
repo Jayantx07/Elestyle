@@ -1,10 +1,13 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { apiClient } from '@/lib/apiClient';
+import React, { useState, useMemo } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchPublicCategories, type Category } from '../services/publicCategoryService';
 import { publicProductService, type PublicProduct } from '../services/publicProductService';
 import { publicSubCategoryService, type PublicSubCategory } from '../services/publicSubCategoryService';
 import { publicFilterService, type StorefrontFilterConfig, type FacetsData } from '../services/publicFilterService';
 import { useWishlist } from '../contexts/WishlistContext';
+import { useQuery } from '@tanstack/react-query';
+import { categoryKeys, subCategoryKeys, productKeys } from '@/lib/queryKeys';
 
 // Icons
 const HeartIcon = ({ isFavorite }: { isFavorite?: boolean }) => (
@@ -31,18 +34,13 @@ const FilterSectionHeader: React.FC<{ title: string; isOpen: boolean; onToggle: 
 );
 
 const CategoryPage: React.FC = () => {
-  const { categorySlug } = useParams<{ categorySlug: string }>();
+  const { categorySlug, subcategorySlug } = useParams<{ categorySlug: string; subcategorySlug?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
   // State Management
-  const [category, setCategory] = useState<Category | null>(null);
-  const [subCategories, setSubCategories] = useState<PublicSubCategory[]>([]);
-  const [products, setProducts] = useState<PublicProduct[]>([]);
-  const [totalProducts, setTotalProducts] = useState(0);
-  const [filterConfigs, setFilterConfigs] = useState<StorefrontFilterConfig[]>([]);
-  const [facets, setFacets] = useState<FacetsData>({
+  const [facetsState, setFacetsState] = useState<FacetsData>({
     colors: [],
     materials: [],
     priceMin: 0,
@@ -51,7 +49,6 @@ const CategoryPage: React.FC = () => {
     availability: [],
   });
   
-  const [loading, setLoading] = useState(true);
   const [minPriceInput, setMinPriceInput] = useState('');
   const [maxPriceInput, setMaxPriceInput] = useState('');
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
@@ -65,7 +62,13 @@ const CategoryPage: React.FC = () => {
   });
 
   // URL parameters as Single Source of Truth
-  const activeSubCategories = useMemo(() => searchParams.getAll('subcategory'), [searchParams]);
+  const activeSubCategories = useMemo(() => {
+    const subs = searchParams.getAll('subcategory');
+    if (subcategorySlug && !subs.includes(subcategorySlug)) {
+      return [...subs, subcategorySlug];
+    }
+    return subs;
+  }, [searchParams, subcategorySlug]);
   const activeColors = useMemo(() => searchParams.getAll('color'), [searchParams]);
   const activeMaterials = useMemo(() => searchParams.getAll('material'), [searchParams]);
   const activePrice = useMemo(() => searchParams.get('price') || '', [searchParams]);
@@ -81,18 +84,24 @@ const CategoryPage: React.FC = () => {
 
   const setSingleFilter = (key: string, value: string) => {
     const newParams = new URLSearchParams(searchParams);
+    if (subcategorySlug && !newParams.getAll('subcategory').includes(subcategorySlug)) {
+      newParams.append('subcategory', subcategorySlug);
+    }
     if (!value || newParams.get(key) === value) {
       newParams.delete(key);
     } else {
       newParams.set(key, value);
     }
     newParams.delete('page');
-    setSearchParams(newParams);
+    navigate(`/category/${categorySlug}?${newParams.toString()}`);
   };
 
   // Toggle helper for URL params
   const toggleUrlParam = (paramKey: string, value: string) => {
     const newParams = new URLSearchParams(searchParams);
+    if (subcategorySlug && !newParams.getAll('subcategory').includes(subcategorySlug)) {
+      newParams.append('subcategory', subcategorySlug);
+    }
     const currentValues = newParams.getAll(paramKey);
 
     if (value === 'ALL' || (currentValues.includes(value) && currentValues.length === 1)) {
@@ -111,47 +120,55 @@ const CategoryPage: React.FC = () => {
     
     // Reset pagination when filter changes
     newParams.delete('page');
-    setSearchParams(newParams);
+    navigate(`/category/${categorySlug}?${newParams.toString()}`);
   };
 
   const clearAllFilters = () => {
     const newParams = new URLSearchParams();
     if (searchParams.has('sort')) newParams.set('sort', searchParams.get('sort')!);
-    setSearchParams(newParams);
+    navigate(`/category/${categorySlug}?${newParams.toString()}`);
   };
 
-  // Initial loads & reacting to URL modifications (Server-Side Filtering)
-  useEffect(() => {
-    if (!categorySlug) return;
-    setLoading(true);
+  const apiParams = new URLSearchParams(searchParams);
+  if (subcategorySlug && !apiParams.getAll('subcategory').includes(subcategorySlug)) {
+    apiParams.append('subcategory', subcategorySlug);
+  }
+  const queryString = apiParams.toString();
 
-    const queryString = searchParams.toString();
+  const { data: category, isLoading: loadingCategory } = useQuery({
+    queryKey: categoryKeys.detail(categorySlug as string),
+    queryFn: () => fetchPublicCategories().then((cats) => cats.find((c) => c.slug === categorySlug)),
+    enabled: !!categorySlug
+  });
 
-    Promise.allSettled([
-      fetchPublicCategories().then((cats) => cats.find((c) => c.slug === categorySlug)),
-      publicSubCategoryService.getSubCategories({ category: categorySlug }),
-      publicFilterService.getFilterConfigs(categorySlug),
-      publicProductService.getProductsByCategorySlug(categorySlug, queryString),
-      publicProductService.getProductFacets(categorySlug, queryString),
-    ])
-      .then(([catRes, subsRes, filtersRes, prodRes, facetsRes]) => {
-        if (catRes.status === 'fulfilled') setCategory(catRes.value || null);
-        if (subsRes.status === 'fulfilled') setSubCategories(subsRes.value || []);
-        if (filtersRes.status === 'fulfilled') setFilterConfigs(filtersRes.value || []);
-        if (prodRes.status === 'fulfilled' && prodRes.value) {
-          setProducts(prodRes.value.data || []);
-          setTotalProducts(prodRes.value.total || (prodRes.value.data || []).length);
-        } else {
-          setProducts([]);
-          setTotalProducts(0);
-        }
-        if (facetsRes.status === 'fulfilled' && facetsRes.value) {
-          setFacets((prev) => ({ ...prev, ...facetsRes.value }));
-        }
-      })
-      .catch((e) => console.error('Error in server-side category catalog rendering:', e))
-      .finally(() => setLoading(false));
-  }, [categorySlug, searchParams]);
+  const { data: subCategories = [], isLoading: loadingSubcats } = useQuery({
+    queryKey: [...subCategoryKeys.lists(), { category: categorySlug }],
+    queryFn: () => publicSubCategoryService.getSubCategories({ category: categorySlug }),
+    enabled: !!categorySlug
+  });
+
+  const { data: filterConfigs = [] } = useQuery({
+    queryKey: ['filters', categorySlug],
+    queryFn: () => publicFilterService.getFilterConfigs(categorySlug!),
+    enabled: !!categorySlug
+  });
+
+  const { data: productsData, isLoading: loadingProducts } = useQuery({
+    queryKey: [...productKeys.lists(), { category: categorySlug, query: queryString }],
+    queryFn: () => publicProductService.getProductsByCategorySlug(categorySlug!, queryString),
+    enabled: !!categorySlug
+  });
+
+  const { data: facetsData } = useQuery({
+    queryKey: [...productKeys.lists(), 'facets', { category: categorySlug, query: queryString }],
+    queryFn: () => publicProductService.getProductFacets(categorySlug!, queryString),
+    enabled: !!categorySlug
+  });
+
+  const products = productsData?.data || [];
+  const totalProducts = productsData?.total || products.length;
+  const facets = { ...facetsState, ...facetsData };
+  const loading = loadingCategory || loadingSubcats || loadingProducts;
 
   const activeFilterCount = activeSubCategories.length + activeColors.length + activeMaterials.length + (activePrice ? 1 : 0) + (activeDiscount ? 1 : 0) + (activeRating ? 1 : 0);
 

@@ -7,14 +7,15 @@ import { adminCategoryService, type AdminCategory } from '../services/categorySe
 import { adminSubCategoryService, type AdminSubCategory } from '../services/subCategoryService';
 import { Plus, Layers, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { categoryKeys, subCategoryKeys } from '@/lib/queryKeys';
+import { apiClient } from '@/lib/apiClient';
 
 export default function CategoryFormPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const isEditing = id && id !== 'new';
-
-  const [loading, setLoading] = useState(isEditing ? true : false);
-  const [saving, setSaving] = useState(false);
 
   const [formData, setFormData] = useState<Partial<AdminCategory>>({
     name: '',
@@ -34,35 +35,28 @@ export default function CategoryFormPage() {
   const [icons, setIcons] = useState<ImageMetadata[]>([]);
 
   const [subCategoriesInput, setSubCategoriesInput] = useState('');
-  const [relationalSubs, setRelationalSubs] = useState<AdminSubCategory[]>([]);
 
-  const fetchCategory = async (catId: string) => {
-    try {
-      setLoading(true);
-      const data = await adminCategoryService.getCategoryById(catId);
-      setFormData(data);
-      if (data.subCategories) setSubCategoriesInput(data.subCategories.join(', '));
-      if (data.image) setImages([{ secure_url: data.image, public_id: '', previewUrl: data.image, isFeatured: false }]);
-      if (data.bannerImage) setBannerImages([{ secure_url: data.bannerImage, public_id: '', previewUrl: data.bannerImage, isFeatured: false }]);
-      if (data.icon) setIcons([{ secure_url: data.icon, public_id: '', previewUrl: data.icon, isFeatured: false }]);
+  const { data: fetchedCategory, isLoading: isLoadingCategory } = useQuery({
+    queryKey: categoryKeys.detail(id as string),
+    queryFn: () => adminCategoryService.getCategoryById(id as string),
+    enabled: isEditing,
+  });
 
-      // Fetch relational subcategories linked to this category
-      const subs = await adminSubCategoryService.getSubCategories({ category: catId });
-      setRelationalSubs(subs);
-    } catch (error) {
-      console.error('Failed to fetch category', error);
-      toast.error('Error loading category');
-      navigate('/admin/categories');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: relationalSubs = [] } = useQuery({
+    queryKey: [...subCategoryKeys.lists(), { category: id }],
+    queryFn: () => adminSubCategoryService.getSubCategories({ category: id }),
+    enabled: isEditing,
+  });
 
   useEffect(() => {
-    if (isEditing && id) {
-      fetchCategory(id);
+    if (fetchedCategory) {
+      setFormData(fetchedCategory);
+      if (fetchedCategory.subCategories) setSubCategoriesInput(fetchedCategory.subCategories.join(', '));
+      if (fetchedCategory.image) setImages([{ secure_url: fetchedCategory.image, public_id: '', previewUrl: fetchedCategory.image, isFeatured: false }]);
+      if (fetchedCategory.bannerImage) setBannerImages([{ secure_url: fetchedCategory.bannerImage, public_id: '', previewUrl: fetchedCategory.bannerImage, isFeatured: false }]);
+      if (fetchedCategory.icon) setIcons([{ secure_url: fetchedCategory.icon, public_id: '', previewUrl: fetchedCategory.icon, isFeatured: false }]);
     }
-  }, [id]);
+  }, [fetchedCategory]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const target = e.target as HTMLInputElement;
@@ -85,22 +79,38 @@ export default function CategoryFormPage() {
     data.append('productSlug', slug + suffix);
     data.append('images', newFiles[0].file!);
 
-    const res = await fetch('/api/v1/upload', {
+    const result = await apiClient('/api/v1/upload', {
       method: 'POST',
       body: data
     });
 
-    if (!res.ok) throw new Error('Failed to upload image');
-    const result = await res.json();
     return result.data[0].secure_url;
   };
+
+  const saveMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      if (isEditing) {
+        return adminCategoryService.updateCategory(id as string, payload);
+      } else {
+        return adminCategoryService.createCategory(payload);
+      }
+    },
+    onSuccess: () => {
+      toast.success(`Category ${isEditing ? 'updated' : 'created'} successfully`);
+      queryClient.invalidateQueries({ queryKey: categoryKeys.all });
+      navigate('/admin/categories');
+    },
+    onError: (error) => {
+      console.error('Failed to save category', error);
+      toast.error('Failed to save category.');
+    }
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.slug) return toast.error('Slug is required');
 
     try {
-      setSaving(true);
       const uploadedImage = await uploadNewImage(formData.slug as string, images, '');
       const uploadedBanner = await uploadNewImage(formData.slug as string, bannerImages, '-banner');
       const uploadedIcon = await uploadNewImage(formData.slug as string, icons, '-icon');
@@ -114,28 +124,14 @@ export default function CategoryFormPage() {
         schemaVersion: 2,
       };
 
-      if (isEditing) {
-        await adminCategoryService.updateCategory(id as string, payload);
-        toast.success('Category updated successfully');
-      } else {
-        await adminCategoryService.createCategory(payload);
-        toast.success('Category created successfully');
-      }
-      
-      const channel = new BroadcastChannel('category_updates');
-      channel.postMessage('updated');
-      channel.close();
-
-      navigate('/admin/categories');
+      saveMutation.mutate(payload);
     } catch (error) {
-      console.error('Failed to save category', error);
-      toast.error('Failed to save category.');
-    } finally {
-      setSaving(false);
+      console.error('Failed to upload images', error);
+      toast.error('Failed to upload images.');
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-gray-500">Loading category...</div>;
+  if (isEditing && isLoadingCategory) return <div className="p-8 text-center text-gray-500">Loading category...</div>;
 
   return (
     <div className="max-w-3xl mx-auto pb-12">
@@ -280,10 +276,10 @@ export default function CategoryFormPage() {
             </button>
             <button
               type="submit"
-              disabled={saving}
+              disabled={saveMutation.isPending}
               className="px-8 py-2 text-sm font-medium text-white bg-primary rounded-md shadow-sm hover:bg-primary/90 disabled:opacity-50"
             >
-              {saving ? 'Saving...' : (isEditing ? 'Save Category Changes' : 'Create Category')}
+              {saveMutation.isPending ? 'Saving...' : (isEditing ? 'Save Category Changes' : 'Create Category')}
             </button>
           </div>
         </div>

@@ -1,3 +1,4 @@
+import { apiClient } from '@/lib/apiClient';
 export interface StorefrontFilterConfig {
   _id: string;
   name: string;
@@ -24,9 +25,8 @@ export interface FacetsData {
 export const publicFilterService = {
   getFilterConfigs: async (categorySlug?: string): Promise<StorefrontFilterConfig[]> => {
     const url = `/api/v1/filters${categorySlug ? `?category=${categorySlug}` : ''}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Failed to fetch filter configurations');
-    const json = await res.json();
+    const res = await apiClient(url);
+    const json = res;
     return (json.data || []).filter((f: StorefrontFilterConfig) => f.enabled && f.visible);
   },
 };

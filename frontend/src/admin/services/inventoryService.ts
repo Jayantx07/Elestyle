@@ -1,3 +1,4 @@
+import { apiClient } from '@/lib/apiClient';
 export interface AdminInventoryItem {
   _id: string;
   product: { _id: string; name: string; slug: string };
@@ -7,20 +8,18 @@ export interface AdminInventoryItem {
 
 export const adminInventoryService = {
   getInventory: async (): Promise<AdminInventoryItem[]> => {
-    const res = await fetch('/api/v1/admin/inventory');
-    if (!res.ok) throw new Error('Failed to fetch inventory');
-    const json = await res.json();
+    const res = await apiClient('/api/v1/admin/inventory');
+    const json = res;
     return json.data;
   },
 
   updateStock: async (id: string, stock: number): Promise<AdminInventoryItem> => {
-    const res = await fetch(`/api/v1/admin/inventory/${id}/stock`, {
+    const res = await apiClient(`/api/v1/admin/inventory/${id}/stock`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ stock })
     });
-    if (!res.ok) throw new Error('Failed to update stock');
-    const json = await res.json();
+    const json = res;
     return json.data;
   }
 };

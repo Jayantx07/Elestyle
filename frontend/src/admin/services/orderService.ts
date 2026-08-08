@@ -1,3 +1,4 @@
+import { apiClient } from '@/lib/apiClient';
 export interface AdminOrder {
   _id: string;
   customerName: string;
@@ -25,27 +26,24 @@ export interface AdminOrder {
 
 export const adminOrderService = {
   getOrders: async (): Promise<AdminOrder[]> => {
-    const res = await fetch('/api/v1/admin/orders');
-    if (!res.ok) throw new Error('Failed to fetch orders');
-    const json = await res.json();
+    const res = await apiClient('/api/v1/admin/orders');
+    const json = res;
     return json.data;
   },
   
   getOrderById: async (id: string): Promise<AdminOrder> => {
-    const res = await fetch(`/api/v1/admin/orders/${id}`);
-    if (!res.ok) throw new Error('Failed to fetch order details');
-    const json = await res.json();
+    const res = await apiClient(`/api/v1/admin/orders/${id}`);
+    const json = res;
     return json.data;
   },
 
   updateOrderStatus: async (id: string, status: AdminOrder['status']): Promise<AdminOrder> => {
-    const res = await fetch(`/api/v1/admin/orders/${id}`, {
+    const res = await apiClient(`/api/v1/admin/orders/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status })
     });
-    if (!res.ok) throw new Error('Failed to update order status');
-    const json = await res.json();
+    const json = res;
     return json.data;
   }
 };

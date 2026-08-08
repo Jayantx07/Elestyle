@@ -114,7 +114,7 @@ const CategoriesPage: React.FC = () => {
 
                         <div className="mt-6 md:mt-7">
                           <Link
-                            to={`/shop/${category.slug}`}
+                            to={`/category/${category.slug}`}
                             className="group inline-flex h-12 items-stretch overflow-hidden rounded-[20px] bg-[#03989E] text-white transition-all duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#03989E]/30"
                           >
                             <span className="flex min-w-[168px] items-center justify-center whitespace-nowrap px-6 font-sans text-[11px] font-semibold uppercase tracking-[0.18em]">

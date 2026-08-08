@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Table, Layers } from 'lucide-react';
 import { PageHeader } from '../components/shared/PageHeader';
@@ -6,57 +6,58 @@ import { DataTable, type Column } from '../components/shared/DataTable';
 import { ConfirmModal } from '../components/shared/ConfirmModal';
 import { CatalogTreeView } from '../components/shared/CatalogTreeView';
 import { adminCategoryService, type AdminCategory } from '../services/categoryService';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { categoryKeys } from '@/lib/queryKeys';
 
 export default function CategoriesPage() {
   const navigate = useNavigate();
-  const [categories, setCategories] = useState<AdminCategory[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'table' | 'tree'>('table');
   
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<AdminCategory | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const fetchCategories = async () => {
-    try {
-      setLoading(true);
-      const data = await adminCategoryService.getCategories();
-      setCategories(data);
-    } catch (error) {
-      console.error('Failed to fetch categories', error);
-    } finally {
-      setLoading(false);
+  const { data: categories = [], isLoading: loading } = useQuery({
+    queryKey: categoryKeys.all,
+    queryFn: () => adminCategoryService.getCategories(),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => adminCategoryService.deleteCategory(id),
+    onMutate: async (deletedId) => {
+      await queryClient.cancelQueries({ queryKey: categoryKeys.all });
+      const previousCategories = queryClient.getQueryData<AdminCategory[]>(categoryKeys.all);
+      if (previousCategories) {
+        queryClient.setQueryData<AdminCategory[]>(
+          categoryKeys.all,
+          previousCategories.filter(c => c._id !== deletedId)
+        );
+      }
+      return { previousCategories };
+    },
+    onError: (err, deletedId, context) => {
+      if (context?.previousCategories) {
+        queryClient.setQueryData(categoryKeys.all, context.previousCategories);
+      }
+      console.error('Failed to delete category', err);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: categoryKeys.all });
+      setDeleteModalOpen(false);
+      setCategoryToDelete(null);
     }
-  };
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+  });
 
   const handleDeleteClick = (e: React.MouseEvent, category: AdminCategory) => {
     e.stopPropagation();
     setCategoryToDelete(category);
-    setDeleteError(null);
     setDeleteModalOpen(true);
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = () => {
     if (!categoryToDelete) return;
-    try {
-      setIsDeleting(true);
-      setDeleteError(null);
-      await adminCategoryService.deleteCategory(categoryToDelete._id);
-      setCategories(categories.filter(c => c._id !== categoryToDelete._id));
-      setDeleteModalOpen(false);
-      setCategoryToDelete(null);
-    } catch (error: any) {
-      console.error('Failed to delete category', error);
-      setDeleteError(error.message || 'Failed to delete category');
-    } finally {
-      setIsDeleting(false);
-    }
+    deleteMutation.mutate(categoryToDelete._id);
   };
 
   const columns: Column<AdminCategory>[] = [
@@ -173,8 +174,8 @@ export default function CategoriesPage() {
         confirmLabel="Delete"
         onConfirm={confirmDelete}
         onCancel={() => setDeleteModalOpen(false)}
-        error={deleteError}
-        isLoading={isDeleting}
+        error={deleteMutation.isError ? deleteMutation.error.message || 'Failed to delete category' : null}
+        isLoading={deleteMutation.isPending}
       />
     </div>
   );

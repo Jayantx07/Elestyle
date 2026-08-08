@@ -1,3 +1,4 @@
+import { apiClient } from '@/lib/apiClient';
 import type { ImageMetadata } from '../components/shared/ImageUpload';
 
 export interface ProductVariant {
@@ -52,51 +53,36 @@ export interface AdminProduct {
 
 export const adminProductService = {
   getProducts: async (): Promise<AdminProduct[]> => {
-    const res = await fetch('/api/v1/admin/products');
-    if (!res.ok) throw new Error('Failed to fetch products');
-    const json = await res.json();
-    return json.data;
+    const res = await apiClient<{ data: AdminProduct[] }>('/api/v1/admin/products');
+    return res.data;
   },
   
   getProductById: async (id: string): Promise<AdminProduct> => {
-    const res = await fetch(`/api/v1/admin/products/${id}`);
-    if (!res.ok) throw new Error('Failed to fetch product');
-    const json = await res.json();
-    return json.data;
+    const res = await apiClient<{ data: AdminProduct }>(`/api/v1/admin/products/${id}`);
+    return res.data;
   },
 
   createProduct: async (productData: Partial<AdminProduct>): Promise<AdminProduct> => {
-    const res = await fetch('/api/v1/admin/products', {
+    const res = await apiClient<{ data: AdminProduct }>('/api/v1/admin/products', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(productData)
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || 'Failed to create product');
-    }
-    const json = await res.json();
-    return json.data;
+    return res.data;
   },
 
   updateProduct: async (id: string, productData: Partial<AdminProduct>): Promise<AdminProduct> => {
-    const res = await fetch(`/api/v1/admin/products/${id}`, {
+    const res = await apiClient<{ data: AdminProduct }>(`/api/v1/admin/products/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(productData)
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || 'Failed to update product');
-    }
-    const json = await res.json();
-    return json.data;
+    return res.data;
   },
 
   deleteProduct: async (id: string): Promise<void> => {
-    const res = await fetch(`/api/v1/admin/products/${id}`, {
+    await apiClient(`/api/v1/admin/products/${id}`, {
       method: 'DELETE'
     });
-    if (!res.ok) throw new Error('Failed to delete product');
   }
 };

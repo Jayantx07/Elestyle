@@ -6,16 +6,16 @@ import { ImageUpload, type ImageMetadata } from '../components/shared/ImageUploa
 import { adminSubCategoryService, type AdminSubCategory } from '../services/subCategoryService';
 import { adminCategoryService, type AdminCategory } from '../services/categoryService';
 import toast from 'react-hot-toast';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { categoryKeys, subCategoryKeys } from '@/lib/queryKeys';
+import { apiClient } from '@/lib/apiClient';
 
 export default function SubCategoryFormPage() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const isEditing = id && id !== 'new';
-
-  const [categories, setCategories] = useState<AdminCategory[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
 
   const [formData, setFormData] = useState<Partial<AdminSubCategory>>({
     name: '',
@@ -37,42 +37,34 @@ export default function SubCategoryFormPage() {
   const [bannerImages, setBannerImages] = useState<ImageMetadata[]>([]);
   const [icons, setIcons] = useState<ImageMetadata[]>([]);
 
-  useEffect(() => {
-    const fetchDropdownCategories = async () => {
-      try {
-        const cats = await adminCategoryService.getCategories();
-        setCategories(cats);
-        if (!formData.category && cats.length > 0 && !isEditing) {
-          setFormData((prev) => ({ ...prev, category: cats[0]._id }));
-        }
-      } catch (e) {
-        console.error('Failed to load parent categories', e);
-      }
-    };
-    fetchDropdownCategories();
+  const { data: categories = [] } = useQuery({
+    queryKey: categoryKeys.all,
+    queryFn: () => adminCategoryService.getCategories(),
+  });
 
-    if (isEditing && id) {
-      const fetchSubCat = async () => {
-        try {
-          setLoading(true);
-          const data = await adminSubCategoryService.getSubCategoryById(id);
-          setFormData({
-            ...data,
-            category: typeof data.category === 'object' ? data.category._id : data.category,
-          });
-          if (data.image) setImages([{ secure_url: data.image, public_id: '', previewUrl: data.image, isFeatured: false }]);
-          if (data.bannerImage) setBannerImages([{ secure_url: data.bannerImage, public_id: '', previewUrl: data.bannerImage, isFeatured: false }]);
-          if (data.icon) setIcons([{ secure_url: data.icon, public_id: '', previewUrl: data.icon, isFeatured: false }]);
-        } catch (e) {
-          toast.error('Error loading subcategory details');
-          navigate('/admin/subcategories');
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchSubCat();
+  const { data: fetchedSubCategory, isLoading: isLoadingSubCategory } = useQuery({
+    queryKey: subCategoryKeys.detail(id as string),
+    queryFn: () => adminSubCategoryService.getSubCategoryById(id as string),
+    enabled: isEditing,
+  });
+
+  useEffect(() => {
+    if (!formData.category && categories.length > 0 && !isEditing) {
+      setFormData((prev) => ({ ...prev, category: categories[0]._id }));
     }
-  }, [id, isEditing]);
+  }, [categories, isEditing, formData.category]);
+
+  useEffect(() => {
+    if (fetchedSubCategory) {
+      setFormData({
+        ...fetchedSubCategory,
+        category: typeof fetchedSubCategory.category === 'object' ? fetchedSubCategory.category._id : fetchedSubCategory.category,
+      });
+      if (fetchedSubCategory.image) setImages([{ secure_url: fetchedSubCategory.image, public_id: '', previewUrl: fetchedSubCategory.image, isFeatured: false }]);
+      if (fetchedSubCategory.bannerImage) setBannerImages([{ secure_url: fetchedSubCategory.bannerImage, public_id: '', previewUrl: fetchedSubCategory.bannerImage, isFeatured: false }]);
+      if (fetchedSubCategory.icon) setIcons([{ secure_url: fetchedSubCategory.icon, public_id: '', previewUrl: fetchedSubCategory.icon, isFeatured: false }]);
+    }
+  }, [fetchedSubCategory]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const target = e.target as HTMLInputElement;
@@ -90,15 +82,31 @@ export default function SubCategoryFormPage() {
     data.append('productSlug', (slug || 'subcat') + suffix);
     data.append('images', newFiles[0].file!);
 
-    const res = await fetch('/api/v1/upload', {
+    const result = await apiClient('/api/v1/upload', {
       method: 'POST',
       body: data,
     });
 
-    if (!res.ok) throw new Error('Failed to upload image');
-    const result = await res.json();
     return result.data[0].secure_url;
   };
+
+  const saveMutation = useMutation({
+    mutationFn: async (payload: Partial<AdminSubCategory>) => {
+      if (isEditing && id) {
+        return adminSubCategoryService.updateSubCategory(id, payload);
+      } else {
+        return adminSubCategoryService.createSubCategory(payload);
+      }
+    },
+    onSuccess: () => {
+      toast.success(`SubCategory ${isEditing ? 'updated' : 'created'} successfully`);
+      queryClient.invalidateQueries({ queryKey: subCategoryKeys.all });
+      navigate('/admin/subcategories');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Error saving subcategory');
+    }
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,7 +116,6 @@ export default function SubCategoryFormPage() {
     }
 
     try {
-      setSaving(true);
       const slugValue = formData.slug || formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
       const uploadedImage = await uploadNewImage(slugValue, images, '');
       const uploadedBanner = await uploadNewImage(slugValue, bannerImages, '-banner');
@@ -122,22 +129,13 @@ export default function SubCategoryFormPage() {
         displayOrder: Number(formData.displayOrder) || 0,
       };
 
-      if (isEditing && id) {
-        await adminSubCategoryService.updateSubCategory(id, payload);
-        toast.success('SubCategory updated successfully');
-      } else {
-        await adminSubCategoryService.createSubCategory(payload);
-        toast.success('SubCategory created successfully');
-      }
-      navigate('/admin/subcategories');
+      saveMutation.mutate(payload);
     } catch (error: any) {
-      toast.error(error.message || 'Error saving subcategory');
-    } finally {
-      setSaving(false);
+      toast.error(error.message || 'Error saving subcategory images');
     }
   };
 
-  if (loading) {
+  if (isEditing && isLoadingSubCategory) {
     return <div className="p-8 text-center text-gray-500">Loading subcategory details...</div>;
   }
 
@@ -290,10 +288,10 @@ export default function SubCategoryFormPage() {
           </button>
           <button
             type="submit"
-            disabled={saving}
+            disabled={saveMutation.isPending}
             className="px-6 py-2 bg-primary text-white rounded-md shadow-sm text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
           >
-            {saving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create SubCategory'}
+            {saveMutation.isPending ? 'Saving...' : isEditing ? 'Save Changes' : 'Create SubCategory'}
           </button>
         </div>
       </form>

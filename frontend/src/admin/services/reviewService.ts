@@ -1,3 +1,4 @@
+import { apiClient } from '@/lib/apiClient';
 export interface AdminReview {
   _id: string;
   product: { _id: string; name: string };
@@ -10,28 +11,25 @@ export interface AdminReview {
 
 export const adminReviewService = {
   getReviews: async (): Promise<AdminReview[]> => {
-    const res = await fetch('/api/v1/admin/reviews');
-    if (!res.ok) throw new Error('Failed to fetch reviews');
-    const json = await res.json();
+    const res = await apiClient('/api/v1/admin/reviews');
+    const json = res;
     return json.data;
   },
 
   updateReviewStatus: async (id: string, status: 'approved' | 'rejected'): Promise<AdminReview> => {
-    const res = await fetch(`/api/v1/admin/reviews/${id}/status`, {
+    const res = await apiClient(`/api/v1/admin/reviews/${id}/status`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status })
     });
-    if (!res.ok) throw new Error('Failed to update review status');
-    const json = await res.json();
+    const json = res;
     return json.data;
   },
 
   deleteReview: async (id: string): Promise<void> => {
-    const res = await fetch(`/api/v1/admin/reviews/${id}`, {
+    const res = await apiClient(`/api/v1/admin/reviews/${id}`, {
       method: 'DELETE'
     });
-    if (!res.ok) throw new Error('Failed to delete review');
   },
 
   createReview: async (data: { product: string; customerName: string; rating: number; comment: string; }): Promise<AdminReview> => {
@@ -39,7 +37,7 @@ export const adminReviewService = {
     // Or hit a specific admin endpoint if we created one.
     // Wait, the backend has POST /api/v1/products/:productId/reviews but the admin doesn't have an explicit create review route in backend.
     // Let's use the public one, and then immediately update it to Approved.
-    const res = await fetch(`/api/v1/products/${data.product}/reviews`, {
+    const res = await apiClient(`/api/v1/products/${data.product}/reviews`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -49,8 +47,7 @@ export const adminReviewService = {
         comment: data.comment
       })
     });
-    if (!res.ok) throw new Error('Failed to create review');
-    const json = await res.json();
+    const json = res;
     
     // Now approve it
     if (json.data && json.data._id) {
