@@ -10,6 +10,15 @@ export interface User {
   role: string;
   profileImage: string;
   isEmailVerified?: boolean;
+  addresses?: Array<{
+    _id?: string;
+    street: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+    isDefault?: boolean;
+  }>;
 }
 
 interface AuthContextType {

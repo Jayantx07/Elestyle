@@ -1,50 +1,45 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '../atoms/Button';
+import React, { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { Typography } from '../atoms/Typography';
-
-const BANNERS = [
-  {
-    id: 'rajasthani-vibes',
-    title: 'Rajasthani Vibes',
-    subtitle: 'HERITAGE COLLECTION',
-    imageSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527414/Rajasthani_Vibe_cover_qeu8de.jpg',
-  },
-  {
-    id: 'handmade-earrings',
-    title: 'Handmade Earrings',
-    subtitle: 'ARTISAN JEWELRY',
-    imageSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527414/handmade_earrings_cover_kebibm.jpg',
-  },
-  {
-    id: 'macrame-bags',
-    title: 'Macrame Bags',
-    subtitle: 'BOHO ESSENTIALS',
-    imageSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527413/macrame_bags_cover_qvbzf6.jpg',
-  },
-  {
-    id: 'handmade-soaps',
-    title: 'Handmade Soaps',
-    subtitle: 'PURE SOAPS',
-    imageSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527414/handmade_candles_cover_chs6qs.jpg',
-  },
-  {
-    id: 'wedding-giveaway',
-    title: 'Wedding Giveaway',
-    subtitle: 'CELEBRATE LOVE',
-    imageSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784527414/wedding_giveaways_cover_yha9rn.jpg',
-  }
-];
+import { publicLandingBannerService, type PublicLandingBanner } from '../../services/publicLandingBannerService';
 
 export const HeroBannerCarousel: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const { data: banners = [], isLoading } = useQuery({
+    queryKey: ['landingBanners', 'public'],
+    queryFn: () => publicLandingBannerService.getLandingBanners(),
+    staleTime: 1000 * 60 * 5,
+  });
 
-  const handleNext = () => setCurrentIndex((prev) => (prev === BANNERS.length - 1 ? 0 : prev + 1));
-  const handlePrev = () => setCurrentIndex((prev) => (prev === 0 ? BANNERS.length - 1 : prev - 1));
+  const activeBanners = banners.length > 0 ? banners : [];
+
+  const handleNext = () => setCurrentIndex((prev) => (prev === activeBanners.length - 1 ? 0 : prev + 1));
+  const handlePrev = () => setCurrentIndex((prev) => (prev === 0 ? activeBanners.length - 1 : prev - 1));
 
   useEffect(() => {
+    if (activeBanners.length <= 1) return;
     const timer = setInterval(handleNext, 6000);
     return () => clearInterval(timer);
-  }, []);
+  }, [activeBanners.length]);
+
+  useEffect(() => {
+    setCurrentIndex(0);
+  }, [activeBanners.length]);
+
+  if (isLoading) {
+    return (
+      <div className="relative w-full h-[60vh] md:h-[85vh] overflow-hidden" style={{ backgroundColor: 'var(--bg-page)' }}>
+        <div className="h-full w-full px-6 md:px-12 py-6">
+          <div className="h-full w-full rounded-[20px] bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
+  if (activeBanners.length === 0) {
+    return null;
+  }
 
   return (
     <div className="relative w-full h-[60vh] md:h-[85vh] overflow-hidden group" style={{ backgroundColor: 'var(--bg-page)' }}>
@@ -53,18 +48,20 @@ export const HeroBannerCarousel: React.FC = () => {
         className="flex w-full h-full transition-transform duration-1000 ease-[cubic-bezier(0.25,1,0.5,1)]"
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
       >
-        {BANNERS.map((banner, index) => {
+        {activeBanners.map((banner: PublicLandingBanner, index: number) => {
           const isActive = index === currentIndex;
+          const categoryPath = banner.category ? `/category/${banner.category.slug}` : '/categories';
           return (
             <div key={banner.id} className="relative w-full h-full flex-shrink-0 px-6 md:px-12 py-6 box-border">
               {/* Image with breathing room and rounded corners */}
-              <div className="w-full h-full overflow-hidden rounded-[20px] shadow-sm">
+              <Link to={categoryPath} className="block w-full h-full overflow-hidden rounded-[20px] shadow-sm">
                 <img
-                  src={banner.imageSrc}
+                  src={banner.imageUrl}
                   alt={banner.title}
                   className="w-full h-full object-cover object-center transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] hover:scale-105"
+                  loading={index === 0 ? 'eager' : 'lazy'}
                 />
-              </div>
+              </Link>
               
               {/* Text aligned to bottom-left */}
               <div className="absolute bottom-16 md:bottom-32 left-8 md:left-24 max-w-xl text-left z-20">
@@ -81,15 +78,15 @@ export const HeroBannerCarousel: React.FC = () => {
                   {banner.title}
                 </Typography>
                 <div className={`transition-all duration-1000 delay-700 ${isActive ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-                  <Button
-                    variant="primary"
-                    shape="rounded"
+                  <Link
+                    to={categoryPath}
+                    className="inline-flex items-center justify-center rounded-lg px-8 py-3 text-sm font-semibold uppercase tracking-[0.15em] text-white shadow-2xl transition-all duration-300"
+                    style={{ backgroundColor: 'var(--accent)' }}
                     data-cursor="explore"
                     data-cursor-text="EXPLORE"
-                    className="px-8 py-3 tracking-[0.15em] text-sm font-semibold uppercase shadow-2xl transition-all duration-300"
                   >
                     Explore Collection
-                  </Button>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -124,7 +121,7 @@ export const HeroBannerCarousel: React.FC = () => {
 
       {/* Dots Navigation */}
       <div className="absolute bottom-6 md:bottom-12 left-1/2 -translate-x-1/2 z-30 flex justify-center gap-3">
-        {BANNERS.map((_, index) => (
+        {activeBanners.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentIndex(index)}

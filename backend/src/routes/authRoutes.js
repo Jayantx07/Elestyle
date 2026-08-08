@@ -25,5 +25,6 @@ router.post('/logout', authController.logout);
 
 router.get('/me', protect, authController.getMe);
 router.put('/profile', protect, authController.updateProfile);
+router.put('/addresses', protect, authController.updateAddresses);
 
 module.exports = router;

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { catalogSyncService } from '@/services/liveSyncService';
-import { categoryKeys, subCategoryKeys, productKeys } from '@/lib/queryKeys';
+import { categoryKeys, subCategoryKeys, productKeys, landingBannerKeys } from '@/lib/queryKeys';
 import { features } from '@/config/features';
 
 export function useLiveSync() {
@@ -18,6 +18,7 @@ export function useLiveSync() {
           queryClient.invalidateQueries({ queryKey: categoryKeys.all });
           queryClient.invalidateQueries({ queryKey: subCategoryKeys.all });
           queryClient.invalidateQueries({ queryKey: productKeys.all });
+          queryClient.invalidateQueries({ queryKey: landingBannerKeys.all });
         }
       } else {
         catalogSyncService.close();
@@ -40,11 +41,14 @@ export function useLiveSync() {
         queryClient.invalidateQueries({ queryKey: subCategoryKeys.all });
       } else if (event.entity === 'product') {
         queryClient.invalidateQueries({ queryKey: productKeys.all });
+      } else if (event.entity === 'landingBanner') {
+        queryClient.invalidateQueries({ queryKey: landingBannerKeys.all });
       } else if (event.entity === 'catalog') {
         // Fallback for global catalog bulk invalidations
         queryClient.invalidateQueries({ queryKey: categoryKeys.all });
         queryClient.invalidateQueries({ queryKey: subCategoryKeys.all });
         queryClient.invalidateQueries({ queryKey: productKeys.all });
+        queryClient.invalidateQueries({ queryKey: landingBannerKeys.all });
       }
     });
 

@@ -56,6 +56,8 @@ class LiveSyncService {
       'category_bulk_updated',
       'subcategory_updated',
       'subcategory_bulk_updated',
+      'landingBanner_updated',
+      'landingBanner_bulk_updated',
       'ping',
       'connected',
     ];

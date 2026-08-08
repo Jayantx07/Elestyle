@@ -22,10 +22,13 @@ const adminAnalyticsRoutes = require('../adminAnalyticsRoutes');
 const adminSettingsRoutes = require('../adminSettingsRoutes');
 const adminSubCategoryRoutes = require('../adminSubCategoryRoutes');
 const adminFilterRoutes = require('../adminFilterRoutes');
+const adminLandingBannerRoutes = require('../adminLandingBannerRoutes');
+const landingBannerRoutes = require('../landingBannerRoutes');
 const authRoutes = require('../authRoutes');
 const cartRoutes = require('../cartRoutes');
 const subCategoryRoutes = require('../subCategoryRoutes');
 const filterRoutes = require('../filterRoutes');
+const orderRoutes = require('../orderRoutes');
 
 router.use('/auth', authRoutes);
 router.use('/upload', uploadRoutes);
@@ -34,8 +37,10 @@ router.use('/categories', require('../categoryRoutes'));
 router.use('/subcategories', subCategoryRoutes);
 router.use('/filters', filterRoutes);
 router.use('/reviews', reviewStandaloneRoutes);
+router.use('/landing-banners', landingBannerRoutes);
 router.use('/checkout', checkoutRoutes);
 router.use('/cart', cartRoutes);
+router.use('/orders', orderRoutes);
 router.use('/admin/dashboard', adminDashboardRoutes);
 router.use('/admin/products', adminProductRoutes);
 router.use('/admin/categories', adminCategoryRoutes);
@@ -48,6 +53,7 @@ router.use('/admin/inventory', adminInventoryRoutes);
 router.use('/admin/coupons', adminCouponRoutes);
 router.use('/admin/analytics', adminAnalyticsRoutes);
 router.use('/admin/settings', adminSettingsRoutes);
+router.use('/admin/landing-banners', adminLandingBannerRoutes);
 
 module.exports = router;
 

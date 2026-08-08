@@ -59,6 +59,18 @@ export const authService = {
     return res;
   },
 
+  async updateAddresses(addresses: any[], token: string) {
+    const res = await apiClient(`${API_URL}/addresses`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ addresses }),
+    });
+    return res;
+  },
+
   async forgotPassword(email: string) {
     const res = await apiClient(`${API_URL}/forgot-password`, {
       method: 'POST',

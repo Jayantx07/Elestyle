@@ -148,6 +148,16 @@ class AuthService {
     return user;
   }
 
+  async updateAddresses(userId, addresses) {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    user.addresses = addresses;
+    await user.save();
+    return user;
+  }
+
   async login(email, password) {
     const user = await User.findOne({ email }).select('+password');
     if (!user) {

@@ -21,3 +21,9 @@ export const productKeys = {
   details: () => [...productKeys.all, 'detail'] as const,
   detail: (id: string) => [...productKeys.details(), id] as const,
 };
+
+export const landingBannerKeys = {
+  all: ['landingBanners'] as const,
+  lists: () => [...landingBannerKeys.all, 'list'] as const,
+  detail: (id: string) => [...landingBannerKeys.all, 'detail', id] as const,
+};

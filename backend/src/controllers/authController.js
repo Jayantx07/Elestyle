@@ -111,6 +111,31 @@ exports.updateProfile = async (req, res, next) => {
   }
 };
 
+exports.updateAddresses = async (req, res, next) => {
+  try {
+    const { addresses } = req.body;
+    if (!Array.isArray(addresses)) {
+      return res.status(400).json({ success: false, message: 'Addresses must be an array' });
+    }
+    const updatedUser = await authService.updateAddresses(req.user._id, addresses);
+    res.status(200).json({
+      success: true,
+      user: {
+        id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phone: updatedUser.phone || '',
+        role: updatedUser.role,
+        profileImage: updatedUser.profileImage,
+        isEmailVerified: updatedUser.isEmailVerified,
+        addresses: updatedUser.addresses,
+      }
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
 exports.forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;

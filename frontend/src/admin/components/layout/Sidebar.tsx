@@ -11,6 +11,7 @@ import {
   Archive, 
   Ticket, 
   BarChart, 
+  ImageIcon,
   Settings 
 } from 'lucide-react';
 
@@ -26,6 +27,7 @@ const MENU_ITEMS = [
   { name: 'Inventory', icon: Archive, path: '/admin/inventory' },
   { name: 'Coupons', icon: Ticket, path: '/admin/coupons' },
   { name: 'Analytics', icon: BarChart, path: '/admin/analytics' },
+  { name: 'Landing Page', icon: ImageIcon, path: '/admin/landing-page' },
   { name: 'Settings', icon: Settings, path: '/admin/settings' },
 ];
 
