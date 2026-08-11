@@ -10,9 +10,11 @@ import { Button } from '../components/atoms/Button';
 type Tab = 'overview' | 'orders' | 'addresses';
 
 const ProfilePage: React.FC = () => {
-  const { user, accessToken, updateUser } = useAuth();
+  const { user, accessToken, updateUser, logout } = useAuth();
+  const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<Tab>('overview');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(user?.name || '');
@@ -64,6 +66,8 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  const verificationProgress = user?.isEmailVerified ? 100 : 50;
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!accessToken) return;
@@ -86,10 +90,6 @@ const ProfilePage: React.FC = () => {
       setIsSaving(false);
     }
   };
-
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !accessToken) return;
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -188,6 +188,11 @@ const ProfilePage: React.FC = () => {
     </svg>
   );
 
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+
   const settingsItems: SettingItem[] = [
     { id: 'email', label: `Email: ${user?.email || 'N/A'}`, icon: EmailIcon, type: 'link', onClick: () => {} },
     { id: 'phone', label: `Phone: ${user?.phone || 'Not provided'}`, icon: PhoneIcon, type: 'link', onClick: () => setIsEditing(true) },
@@ -197,7 +202,6 @@ const ProfilePage: React.FC = () => {
 
   const handleToggleChange = (id: string, newValue: boolean) => {
     if (id === 'notification') setNotificationsEnabled(newValue);
-  };
   };
 
   return (
@@ -366,7 +370,7 @@ const ProfilePage: React.FC = () => {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
               </button>
             </div>
-            {editError && <div className="p-3 bg-red-50 text-red-600 rounded-xl text-xs font-medium">{editError}</div>}
+            {error && <div className="p-3 bg-red-50 text-red-600 rounded-xl text-xs font-medium">{error}</div>}
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">Full Name</label>
@@ -432,8 +436,6 @@ const ProfilePage: React.FC = () => {
           </div>
         </div>
       )}
-        </div>
-      </div>
     </div>
   );
 };
