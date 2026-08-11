@@ -1,25 +1,41 @@
 import { apiClient } from '@/lib/apiClient';
+
 export interface AdminCoupon {
   _id: string;
   code: string;
-  discountType: 'percentage' | 'fixed';
+  title?: string;
+  description?: string;
+  discountType: 'percentage' | 'fixed' | 'free_shipping';
   discountValue: number;
+  maxDiscountAmount: number;
   minPurchaseAmount: number;
+  applicableCategories: string[];
+  applicableProducts: string[];
+  excludedCategories: string[];
+  excludedProducts: string[];
+  customerEligibility: string[];
+  allowGuest: boolean;
+  maxUsageLimit: number | null;
+  currentUsageCount: number;
+  perCustomerUsageLimit: number;
+  startDate: string;
   expiryDate: string;
+  isActive: boolean;
   status: 'Active' | 'Expired';
+  priority: number;
+  stackable: boolean;
+  autoApply: boolean;
 }
 
 export const adminCouponService = {
   getCoupons: async (): Promise<AdminCoupon[]> => {
     const res = await apiClient('/api/v1/admin/coupons');
-    const json = res;
-    return json.data;
+    return res.data;
   },
 
   getCouponById: async (id: string): Promise<AdminCoupon> => {
     const res = await apiClient(`/api/v1/admin/coupons/${id}`);
-    const json = res;
-    return json.data;
+    return res.data;
   },
 
   createCoupon: async (couponData: Partial<AdminCoupon>): Promise<AdminCoupon> => {
@@ -28,8 +44,7 @@ export const adminCouponService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(couponData)
     });
-    const json = res;
-    return json.data;
+    return res.data;
   },
 
   updateCoupon: async (id: string, couponData: Partial<AdminCoupon>): Promise<AdminCoupon> => {
@@ -38,12 +53,11 @@ export const adminCouponService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(couponData)
     });
-    const json = res;
-    return json.data;
+    return res.data;
   },
 
   deleteCoupon: async (id: string): Promise<void> => {
-    const res = await apiClient(`/api/v1/admin/coupons/${id}`, {
+    await apiClient(`/api/v1/admin/coupons/${id}`, {
       method: 'DELETE'
     });
   }

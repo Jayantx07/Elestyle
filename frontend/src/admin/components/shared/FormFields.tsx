@@ -123,3 +123,30 @@ export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>(
 );
 
 FormTextarea.displayName = 'FormTextarea';
+
+interface FormCheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label: string;
+}
+
+export const FormCheckbox = forwardRef<HTMLInputElement, FormCheckboxProps>(
+  ({ label, className = '', id, ...props }, ref) => {
+    const checkboxId = id || label.replace(/\s+/g, '-').toLowerCase();
+    
+    return (
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id={checkboxId}
+          ref={ref}
+          className={`h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded ${className}`}
+          {...props}
+        />
+        <label htmlFor={checkboxId} className="ml-2 block text-sm text-gray-900">
+          {label}
+        </label>
+      </div>
+    );
+  }
+);
+
+FormCheckbox.displayName = 'FormCheckbox';

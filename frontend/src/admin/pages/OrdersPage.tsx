@@ -58,14 +58,13 @@ export default function OrdersPage() {
       header: 'Status',
       render: (order) => {
         let badgeStatus: any = 'default';
-        switch (order.status) {
-          case 'Pending': badgeStatus = 'warning'; break;
-          case 'Confirmed': badgeStatus = 'info'; break;
-          case 'Shipped': badgeStatus = 'info'; break;
-          case 'Delivered': badgeStatus = 'success'; break;
-          case 'Cancelled': badgeStatus = 'error'; break;
-        }
-        return <StatusBadge status={badgeStatus} label={order.status} />;
+        const s = order.status;
+        if (s === 'delivered') badgeStatus = 'success';
+        else if (['cancelled', 'payment_failed'].includes(s)) badgeStatus = 'error';
+        else if (['pending_payment', 'refund_pending'].includes(s)) badgeStatus = 'warning';
+        else if (['confirmed', 'processing', 'packed', 'shipped'].includes(s)) badgeStatus = 'info';
+        
+        return <StatusBadge status={badgeStatus} label={s.replace('_', ' ').toUpperCase()} />;
       }
     },
     {

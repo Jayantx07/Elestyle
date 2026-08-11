@@ -8,6 +8,11 @@ const reviewSchema = new mongoose.Schema(
       ref: 'Product',
       required: [true, 'Review must belong to a product.'],
     },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'Review must belong to a user.'],
+    },
     customerName: {
       type: String,
       required: [true, 'Please provide your name.'],
@@ -40,6 +45,10 @@ const reviewSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isVerifiedPurchase: {
+      type: Boolean,
+      default: false,
+    },
     images: {
       type: [String],
       default: [],
@@ -57,6 +66,8 @@ const reviewSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+reviewSchema.index({ product: 1, user: 1 }, { unique: true });
 
 // Calculate average ratings when a review is created or updated
 reviewSchema.statics.calcAverageRatings = async function (productId) {
@@ -94,6 +105,10 @@ reviewSchema.post(/^findOneAnd/, async function (doc) {
   if (doc) {
     await doc.constructor.calcAverageRatings(doc.product);
   }
+});
+
+reviewSchema.post('deleteOne', { document: true, query: false }, function () {
+  this.constructor.calcAverageRatings(this.product);
 });
 
 const Review = mongoose.model('Review', reviewSchema);

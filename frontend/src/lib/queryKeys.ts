@@ -27,3 +27,11 @@ export const landingBannerKeys = {
   lists: () => [...landingBannerKeys.all, 'list'] as const,
   detail: (id: string) => [...landingBannerKeys.all, 'detail', id] as const,
 };
+
+export const couponKeys = {
+  all: ['coupons'] as const,
+  lists: () => [...couponKeys.all, 'list'] as const,
+  list: (filters: Record<string, any>) => [...couponKeys.lists(), { filters }] as const,
+  details: () => [...couponKeys.all, 'detail'] as const,
+  detail: (id: string) => [...couponKeys.details(), id] as const,
+};

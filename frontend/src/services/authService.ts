@@ -71,6 +71,20 @@ export const authService = {
     return res;
   },
 
+  async uploadAvatar(file: File, token: string) {
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    const res = await apiClient(`${API_URL}/avatar`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+    return res;
+  },
+
   async forgotPassword(email: string) {
     const res = await apiClient(`${API_URL}/forgot-password`, {
       method: 'POST',

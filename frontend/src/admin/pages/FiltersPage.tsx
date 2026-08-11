@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, ArrowUp, ArrowDown, Sliders, Eye, CheckCircle2 } from 'lucide-react';

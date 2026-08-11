@@ -1,8 +1,10 @@
 import { apiClient } from '@/lib/apiClient';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Typography } from '../components/atoms/Typography';
 import { Button } from '../components/atoms/Button';
+import { useAuth } from '../contexts/AuthContext';
+import { cartService } from '../services/cartService';
 import { useCart, type CartItem } from '../contexts/CartContext';
 
 type AddressValues = {
@@ -75,8 +77,19 @@ function PaymentOption({
 }
 
 export default function CheckoutPage() {
+  const loadRazorpay = useCallback(() => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  }, []);
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { accessToken } = useAuth();
   const isTempSession = searchParams.get('session') === 'temp';
   
   const { items: cartItems, subtotal: cartSubtotal, discount: cartDiscount, grandTotal: cartTotal, clearCart } = useCart();
@@ -95,7 +108,65 @@ export default function CheckoutPage() {
   const [billingAddress, setBillingAddress] = useState({ addressLine1: '', addressLine2: '', city: '', state: '', postalCode: '', country: '' });
   const [sameAsShipping, setSameAsShipping] = useState(true);
   const [notes, setNotes] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('Credit Card');
+  const [paymentMethod, setPaymentMethod] = useState('Razorpay');
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('new');
+  const [saveShippingAddress, setSaveShippingAddress] = useState(false);
+
+  const { user } = useAuth();
+  const addresses = user?.addresses || [];
+
+  useEffect(() => {
+    if (user) {
+      setCustomer(prev => ({
+        name: user.name || prev.name,
+        email: user.email || prev.email,
+        phone: user.phone || prev.phone,
+      }));
+      const defaultAddr = user.addresses?.find((a: any) => a.isDefault);
+      if (defaultAddr) {
+        setSelectedAddressId(defaultAddr._id);
+        setShippingAddress({
+          addressLine1: defaultAddr.addressLine1,
+          addressLine2: defaultAddr.addressLine2 || '',
+          city: defaultAddr.city,
+          state: defaultAddr.state,
+          postalCode: defaultAddr.postalCode,
+          country: defaultAddr.country
+        });
+      } else if (user.addresses && user.addresses.length > 0) {
+        const firstAddr = user.addresses[0];
+        setSelectedAddressId(firstAddr._id);
+        setShippingAddress({
+          addressLine1: firstAddr.addressLine1,
+          addressLine2: firstAddr.addressLine2 || '',
+          city: firstAddr.city,
+          state: firstAddr.state,
+          postalCode: firstAddr.postalCode,
+          country: firstAddr.country
+        });
+      }
+    }
+  }, [user]);
+
+  const handleAddressSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    setSelectedAddressId(val);
+    if (val === 'new') {
+      setShippingAddress({ addressLine1: '', addressLine2: '', city: '', state: '', postalCode: '', country: '' });
+    } else {
+      const addr = addresses.find((a: any) => a._id === val);
+      if (addr) {
+        setShippingAddress({
+          addressLine1: addr.addressLine1,
+          addressLine2: addr.addressLine2 || '',
+          city: addr.city,
+          state: addr.state,
+          postalCode: addr.postalCode,
+          country: addr.country
+        });
+      }
+    }
+  };
 
   useEffect(() => {
     if (isTempSession) {
@@ -118,14 +189,26 @@ export default function CheckoutPage() {
   }, [isTempSession, cartItems, cartSubtotal, cartDiscount, cartTotal, discount, navigate]);
 
   const handleApplyCoupon = async () => {
-    // Basic local application to update UI before backend does the real check
-    if (coupon.toUpperCase() === 'DISCOUNT10') {
-      const newDiscount = subtotal * 0.1;
-      setDiscount(newDiscount);
-      setGrandTotal(subtotal - newDiscount);
-      setError(null);
-    } else {
-      setError('Invalid coupon code');
+    setError(null);
+    if (!coupon) return;
+    
+    try {
+      const payloadItems = items.map(i => ({ productId: i.id, quantity: i.quantity }));
+      const res = await cartService.validateCoupon(coupon, payloadItems, accessToken);
+      
+      if (res.success && res.data?.valid) {
+        setDiscount(res.data.pricing.discount);
+        setGrandTotal(res.data.pricing.grandTotal);
+        setError(null);
+      } else {
+        setError(res.message || 'Invalid coupon code');
+        setDiscount(0);
+        setGrandTotal(subtotal);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to apply coupon');
+      setDiscount(0);
+      setGrandTotal(subtotal);
     }
   };
 
@@ -137,38 +220,126 @@ export default function CheckoutPage() {
     const billing = sameAsShipping ? shippingAddress : billingAddress;
 
     try {
-      const response = await apiClient('/api/v1/checkout/process', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      if (paymentMethod === 'Razorpay') {
+        const payload = {
           customer,
-          shippingAddress,
+          shippingAddress: selectedAddressId === 'new' ? shippingAddress : undefined,
+          shippingAddressId: selectedAddressId !== 'new' ? selectedAddressId : undefined,
+          saveAddress: selectedAddressId === 'new' ? saveShippingAddress : false,
+          billingAddress: billing,
+          items: items.map(i => ({ product: i.id, quantity: i.quantity })),
+          couponCode: coupon,
+          notes,
+        };
+
+        const orderResponse = await apiClient('/api/v1/payments/razorpay/order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!orderResponse.success) {
+          setError(orderResponse.message || 'Failed to create order');
+          setLoading(false);
+          return;
+        }
+
+        const isLoaded = await loadRazorpay();
+        if (!isLoaded) {
+          setError('Razorpay SDK failed to load. Are you online?');
+          setLoading(false);
+          return;
+        }
+
+        const options = {
+          key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+          amount: orderResponse.data.amount,
+          currency: orderResponse.data.currency,
+          name: 'ElleStyle',
+          description: 'Secure Checkout',
+          order_id: orderResponse.data.orderId,
+          handler: async function (response: any) {
+            try {
+              setLoading(true);
+              const verifyRes = await apiClient('/api/v1/payments/razorpay/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_signature: response.razorpay_signature,
+                })
+              });
+              
+              if (verifyRes.success) {
+                if (isTempSession) sessionStorage.removeItem('temp_checkout_session');
+                else clearCart();
+                alert('Order placed successfully! Order Number: ' + verifyRes.data.orderNumber);
+                navigate('/');
+              } else {
+                setError(verifyRes.message || 'Payment verification failed');
+                setLoading(false);
+              }
+            } catch (err: any) {
+              setError(err.message || 'Payment verification failed');
+              setLoading(false);
+            }
+          },
+          prefill: {
+            name: customer.name,
+            email: customer.email,
+            contact: customer.phone,
+          },
+          theme: { color: '#000000' }
+        };
+
+        const paymentObject = new (window as any).Razorpay(options);
+        paymentObject.on('payment.failed', function (response: any) {
+          setError(response.error.description);
+          setLoading(false);
+        });
+        paymentObject.open();
+
+      } else {
+        // COD Flow
+        const payload = {
+          customer,
+          shippingAddress: selectedAddressId === 'new' ? shippingAddress : undefined,
+          shippingAddressId: selectedAddressId !== 'new' ? selectedAddressId : undefined,
+          saveAddress: selectedAddressId === 'new' ? saveShippingAddress : false,
           billingAddress: billing,
           items: items.map(i => ({ product: i.id, quantity: i.quantity })),
           paymentMethod,
           couponCode: coupon,
           notes,
-        })
-      });
+        };
 
-      const data = response;
-      
-      if (data.success) {
-        if (isTempSession) {
-          sessionStorage.removeItem('temp_checkout_session');
+        const response = await apiClient('/api/v1/checkout/process', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = response;
+        
+        if (data.success) {
+          if (isTempSession) {
+            sessionStorage.removeItem('temp_checkout_session');
+          } else {
+            clearCart();
+          }
+          alert('Order placed successfully! Order Number: ' + data.data.orderNumber);
+          navigate('/');
         } else {
-          clearCart();
+          setError(data.message || 'Failed to process order.');
+          setLoading(false);
         }
-        alert('Order placed successfully! Order Number: ' + data.data.orderNumber);
-        navigate('/');
-      } else {
-        setError(data.message || 'Failed to process order.');
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred during checkout.');
-    } finally {
       setLoading(false);
     }
+    // We don't finally setLoading(false) here because Razorpay modal might be open.
   };
 
   if (items.length === 0) {
@@ -205,7 +376,36 @@ export default function CheckoutPage() {
 
             <section className={sectionClass}>
               <Typography variant="h4" className="mb-6">Shipping Address</Typography>
-              <AddressFields values={shippingAddress} onChange={setShippingAddress} statePlaceholder="State/Province" />
+              
+              {addresses.length > 0 && (
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Saved Addresses</label>
+                  <select 
+                    value={selectedAddressId} 
+                    onChange={handleAddressSelect}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-black transition-colors"
+                  >
+                    {addresses.map((addr: any) => (
+                      <option key={addr._id} value={addr._id}>
+                        {addr.addressLine1}, {addr.city}, {addr.state} {addr.postalCode} {addr.isDefault ? '(Default)' : ''}
+                      </option>
+                    ))}
+                    <option value="new">+ Enter a new address</option>
+                  </select>
+                </div>
+              )}
+
+              {selectedAddressId === 'new' && (
+                <div className="flex flex-col gap-4 mt-2">
+                  <AddressFields values={shippingAddress} onChange={setShippingAddress} statePlaceholder="State/Province" />
+                  {user && (
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input type="checkbox" checked={saveShippingAddress} onChange={(e) => setSaveShippingAddress(e.target.checked)} className="w-5 h-5 rounded border-gray-300 text-black focus:ring-black" />
+                      <span className="font-sans text-[15px] text-gray-700">Save this address to my profile</span>
+                    </label>
+                  )}
+                </div>
+              )}
             </section>
 
             <section className={sectionClass}>
@@ -227,8 +427,8 @@ export default function CheckoutPage() {
             <section className={sectionClass}>
               <Typography variant="h4" className="mb-6">Payment Method</Typography>
               <div className="flex flex-col gap-3">
-                <PaymentOption value="Credit Card" selected={paymentMethod} onChange={setPaymentMethod}>
-                  Credit Card (Dummy)
+                <PaymentOption value="Razorpay" selected={paymentMethod} onChange={setPaymentMethod}>
+                  Razorpay (Cards, UPI, NetBanking)
                 </PaymentOption>
                 <PaymentOption value="Cash on Delivery" selected={paymentMethod} onChange={setPaymentMethod}>
                   Cash on Delivery
@@ -264,7 +464,7 @@ export default function CheckoutPage() {
             </div>
 
             <div className="flex gap-2 mb-8">
-              <input type="text" placeholder="Coupon Code (try DISCOUNT10)" value={coupon} onChange={e => setCoupon(e.target.value)} className="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-black transition-colors" />
+              <input type="text" placeholder="Coupon Code" value={coupon} onChange={e => setCoupon(e.target.value)} className="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-black transition-colors" />
               <Button onClick={handleApplyCoupon} variant="outline" className="rounded-xl px-6 whitespace-nowrap">Apply</Button>
             </div>
 

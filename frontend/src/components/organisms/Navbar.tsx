@@ -20,10 +20,10 @@ type CategoryGroup = {
 };
 
 const desktopNavLinkClass = (isActive: boolean) =>
-  `font-sans text-[14px] transition-colors duration-200 ${isActive ? 'font-semibold text-gray-900' : 'font-medium text-gray-700 hover:text-gray-900'}`;
+  `font-sans text-[14px] transition-colors duration-200 ${isActive ? 'font-semibold text-[#03989E]' : 'font-medium text-gray-700 hover:text-[#03989E]'}`;
 
 const mobileNavLinkClass = (isActive: boolean) =>
-  `px-6 py-4 font-sans text-sm transition-colors duration-200 ${isActive ? 'font-semibold text-[var(--text-primary)] bg-gray-50' : 'font-medium text-[var(--text-secondary)] hover:bg-gray-50 hover:text-[var(--text-primary)]'}`;
+  `px-6 py-4 font-sans text-sm transition-colors duration-200 ${isActive ? 'font-semibold text-[#03989E] bg-gray-50' : 'font-medium text-[var(--text-secondary)] hover:bg-gray-50 hover:text-[#03989E]'}`;
 
 const iconButtonStyle = { color: 'var(--text-primary)', transformOrigin: 'center' } as React.CSSProperties;
 
@@ -212,7 +212,7 @@ export const Navbar: React.FC = () => {
               >
                 <NavLink
                   to="/categories"
-                  className={`font-sans text-[14px] transition-colors duration-200 ${isCategoriesPageActive || isShopSectionActive ? 'font-semibold text-black' : 'font-medium text-black hover:text-gray-800'}`}
+                  className={`font-sans text-[14px] transition-colors duration-200 ${isCategoriesPageActive || isShopSectionActive ? 'font-semibold text-[#03989E]' : 'font-medium text-black hover:text-[#03989E]'}`}
                 >
                   Categories
                 </NavLink>

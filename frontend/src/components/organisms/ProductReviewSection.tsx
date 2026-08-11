@@ -1,6 +1,8 @@
 import { apiClient } from '@/lib/apiClient';
 import React, { useState } from 'react';
 import { Typography } from '../atoms/Typography';
+import { useAuth } from '../../contexts/AuthContext';
+import { Link } from 'react-router-dom';
 
 export interface ProductReviewSectionProps {
   productId: string;
@@ -22,9 +24,8 @@ export interface ProductReviewSectionProps {
 import { publicProductService } from '../../services/publicProductService';
 
 export const ProductReviewSection: React.FC<ProductReviewSectionProps> = ({ productId, ratingAverage, reviewCount, reviews: initialReviews }) => {
+  const { user, accessToken } = useAuth();
   const [isWriting, setIsWriting] = useState(false);
-  const [customerName, setCustomerName] = useState('');
-  const [customerEmail, setCustomerEmail] = useState('');
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [submitMessage, setSubmitMessage] = useState('');
@@ -60,22 +61,26 @@ export const ProductReviewSection: React.FC<ProductReviewSectionProps> = ({ prod
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!accessToken) return;
     try {
       const res = await apiClient(`/api/v1/products/${productId}/reviews`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customerName, customerEmail, rating, comment })
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({ rating, comment })
       });
       const data = res;
       if (data.success) {
         setSubmitMessage('Review submitted successfully. It is pending approval.');
-        setCustomerName(''); setCustomerEmail(''); setComment(''); setRating(5);
+        setComment(''); setRating(5);
         setTimeout(() => { setIsWriting(false); setSubmitMessage(''); }, 3000);
       } else {
         setSubmitMessage(data.message || 'Error submitting review');
       }
-    } catch (error) {
-      setSubmitMessage('Network error');
+    } catch (error: any) {
+      setSubmitMessage(error.message || 'Network error');
     }
   };
   return (
@@ -124,7 +129,11 @@ export const ProductReviewSection: React.FC<ProductReviewSectionProps> = ({ prod
           <div className="flex flex-col items-start md:items-center justify-center w-full md:w-auto p-8 rounded-3xl" style={{ backgroundColor: 'var(--surface-card)', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
             <Typography variant="h5" className="mb-2">Review this product</Typography>
             <p className="font-sans text-[14px] mb-6 text-center" style={{ color: 'var(--text-secondary)' }}>Share your thoughts with other customers</p>
-            {!isWriting ? (
+            {!user ? (
+              <Link to="/auth/login" className="px-8 py-3 rounded-full bg-black text-white text-[14px] font-sans font-medium transition-transform hover:scale-105">
+                Log in to review
+              </Link>
+            ) : !isWriting ? (
               <button onClick={() => setIsWriting(true)} className="px-8 py-3 rounded-full bg-black text-white text-[14px] font-sans font-medium transition-transform hover:scale-105">
                 Write a customer review
               </button>
@@ -137,22 +146,16 @@ export const ProductReviewSection: React.FC<ProductReviewSectionProps> = ({ prod
         </div>
 
         {/* Review Form */}
-        {isWriting && (
+        {isWriting && user && (
           <div className="mb-16">
             <form onSubmit={handleSubmitReview} className="p-8 md:p-10 rounded-[2rem] border border-gray-100 bg-white shadow-xl max-w-3xl mx-auto w-full transition-all duration-300 transform origin-top">
               <Typography variant="h3" className="mb-8 text-center">Write a Review</Typography>
-              {submitMessage && <div className="mb-6 p-4 rounded-xl bg-green-50 border border-green-100 text-green-700 text-sm font-medium text-center">{submitMessage}</div>}
-              <div className="flex flex-col gap-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-700">Full Name</label>
-                    <input required type="text" placeholder="e.g. Jane Doe" value={customerName} onChange={e => setCustomerName(e.target.value)} className="px-5 py-3 border border-gray-200 rounded-xl text-sm focus:border-black outline-none transition-colors bg-gray-50/50 focus:bg-white" />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-700">Email Address</label>
-                    <input required type="email" placeholder="e.g. jane@example.com" value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} className="px-5 py-3 border border-gray-200 rounded-xl text-sm focus:border-black outline-none transition-colors bg-gray-50/50 focus:bg-white" />
-                  </div>
+              {submitMessage && (
+                <div className={`mb-6 p-4 rounded-xl border text-sm font-medium text-center ${submitMessage.includes('success') ? 'bg-green-50 border-green-100 text-green-700' : 'bg-red-50 border-red-100 text-red-700'}`}>
+                  {submitMessage}
                 </div>
+              )}
+              <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-medium text-gray-700">Overall Rating</label>
                   <select value={rating} onChange={e => setRating(Number(e.target.value))} className="px-5 py-3 border border-gray-200 rounded-xl text-sm outline-none transition-colors bg-gray-50/50 focus:bg-white w-full md:w-1/3 cursor-pointer">

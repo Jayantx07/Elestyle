@@ -1,25 +1,47 @@
 const Review = require('../models/Review');
 const Product = require('../models/Product');
+const Order = require('../models/Order');
 
 // @desc    Create new review
 // @route   POST /api/v1/products/:productId/reviews
-// @access  Public
+// @access  Private
 exports.createReview = async (req, res) => {
   try {
     const { productId } = req.params;
     const { customerName, customerEmail, rating, comment } = req.body;
+    const userId = req.user._id;
 
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
+    // Check if user already reviewed this product
+    const existingReview = await Review.findOne({ product: productId, user: userId });
+    if (existingReview) {
+      return res.status(400).json({ success: false, message: 'You have already reviewed this product' });
+    }
+
+    // Verify purchase
+    // A verified purchase means there's an order for this user (by email or id) containing this product, and it is completed/shipped/delivered.
+    const hasPurchased = await Order.findOne({
+      $or: [{ 'customer.email': req.user.email }, { customer: userId }],
+      'items.product': productId,
+      orderStatus: { $in: ['processing', 'packed', 'shipped', 'delivered'] }
+    });
+
+    if (!hasPurchased) {
+      return res.status(403).json({ success: false, message: 'You can only review products you have purchased.' });
+    }
+
     const review = await Review.create({
       product: productId,
-      customerName,
-      customerEmail,
+      user: userId,
+      customerName: req.user.name || customerName,
+      customerEmail: req.user.email || customerEmail,
       rating,
       comment,
+      isVerifiedPurchase: true,
       status: 'pending', // default is pending
     });
 
@@ -28,6 +50,9 @@ exports.createReview = async (req, res) => {
       data: review,
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ success: false, message: 'You have already reviewed this product' });
+    }
     res.status(400).json({ success: false, message: error.message });
   }
 };

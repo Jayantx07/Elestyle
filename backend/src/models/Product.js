@@ -105,6 +105,18 @@ const productSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    lowStockAlertActive: {
+      type: Boolean,
+      default: false,
+    },
+    lowStockAlertThreshold: {
+      type: Number,
+      default: 5,
+    },
+    lowStockAlertMessage: {
+      type: String,
+      default: 'Order fast, stock is running low!',
+    },
     displayOrder: {
       type: Number,
       default: 0,
@@ -121,6 +133,14 @@ const productSchema = new mongoose.Schema(
     weight: {
       type: String,
       trim: true,
+    },
+    paymentMethod: {
+      type: [String],
+      default: ['Cash on Delivery Available'],
+    },
+    returnWarranty: {
+      type: Number,
+      default: 7,
     },
     dimensions: {
       length: { type: Number },

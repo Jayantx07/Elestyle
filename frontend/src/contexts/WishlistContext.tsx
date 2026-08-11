@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
+import { apiClient } from '../lib/apiClient';
 
 export interface WishlistItem {
   id: string; // Product ID
@@ -9,6 +10,7 @@ export interface WishlistItem {
   color?: { name: string; hex: string };
   dateAdded?: string;
   stockStatus?: 'In Stock' | 'Out of Stock';
+  compareAtPrice?: number;
 }
 
 interface WishlistContextType {
@@ -18,45 +20,97 @@ interface WishlistContextType {
   removeFromWishlist: (id: string) => void;
   isInWishlist: (id: string) => boolean;
   clearWishlist: () => void;
+  fetchWishlist: () => Promise<void>;
+  isLoading: boolean;
 }
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 
 export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [items, setItems] = useState<WishlistItem[]>(() => {
-    const saved = localStorage.getItem('wishlist');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const { user } = useAuth();
+  const [items, setItems] = useState<WishlistItem[]>([]);
+  const { user, accessToken } = useAuth();
   const [hasMerged, setHasMerged] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchWishlist = useCallback(async () => {
+    if (!accessToken) return;
+    setIsLoading(true);
+    try {
+      const res = await apiClient('/api/v1/wishlist', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      if (res.success && res.data) {
+        const mappedItems: WishlistItem[] = res.data.map((p: any) => ({
+          id: p._id,
+          title: p.name,
+          price: p.price,
+          compareAtPrice: p.compareAtPrice,
+          imageSrc: p.images && p.images.length > 0 ? p.images[0].secure_url : '',
+          stockStatus: p.availability,
+        }));
+        setItems(mappedItems);
+      }
+    } catch (e) {
+      console.error('Failed to fetch wishlist', e);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [accessToken]);
 
   useEffect(() => {
-    localStorage.setItem('wishlist', JSON.stringify(items));
-  }, [items]);
-
-  useEffect(() => {
-    if (user && !hasMerged) {
-      console.log('Merging local wishlist to DB for user:', user.email);
-      // Here you would call a backend API to push local items to the DB
-      // Then clear local storage and fetch DB wishlist.
-      setHasMerged(true);
+    if (user && accessToken && !hasMerged) {
+      // Local merge could go here, for now we just fetch
+      fetchWishlist().then(() => setHasMerged(true));
     }
     if (!user) {
+      setItems([]);
       setHasMerged(false);
     }
-  }, [user, items, hasMerged]);
+  }, [user, accessToken, hasMerged, fetchWishlist]);
 
   const itemCount = items.length;
 
-  const addToWishlist = (newItem: WishlistItem) => {
+  const addToWishlist = async (newItem: WishlistItem) => {
+    // Optimistic UI update
     setItems((prev) => {
-      if (prev.find((i) => i.id === newItem.id)) return prev; // already exists
+      if (prev.find((i) => i.id === newItem.id)) return prev;
       return [...prev, newItem];
     });
+
+    if (accessToken) {
+      try {
+        await apiClient('/api/v1/wishlist', {
+          method: 'POST',
+          headers: { 
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify({ productId: newItem.id })
+        });
+      } catch (error) {
+        console.error('Failed to add to wishlist backend', error);
+        // Rollback on failure
+        fetchWishlist();
+      }
+    }
   };
 
-  const removeFromWishlist = (id: string) => {
+  const removeFromWishlist = async (id: string) => {
+    // Optimistic UI update
     setItems((prev) => prev.filter((i) => i.id !== id));
+
+    if (accessToken) {
+      try {
+        await apiClient(`/api/v1/wishlist/${id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+      } catch (error) {
+        console.error('Failed to remove from wishlist backend', error);
+        // Rollback on failure
+        fetchWishlist();
+      }
+    }
   };
 
   const isInWishlist = (id: string) => {
@@ -76,6 +130,8 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         removeFromWishlist,
         isInWishlist,
         clearWishlist,
+        fetchWishlist,
+        isLoading
       }}
     >
       {children}

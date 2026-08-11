@@ -65,7 +65,7 @@ exports.getCart = async (req, res) => {
 // @access  Private
 exports.addToCart = async (req, res) => {
   try {
-    const { productId, quantity, price } = req.body;
+    const { productId, quantity } = req.body;
 
     const product = await Product.findById(productId);
     if (!product) {
@@ -83,7 +83,7 @@ exports.addToCart = async (req, res) => {
     if (!cart) {
       cart = await Cart.findOneAndUpdate(
         { user: req.user._id },
-        { $push: { items: { product: productId, quantity: quantity || 1, price: price || product.price } } },
+        { $push: { items: { product: productId, quantity: quantity || 1, price: product.price } } },
         { returnDocument: 'after' }
       );
     }
@@ -93,14 +93,14 @@ exports.addToCart = async (req, res) => {
       try {
         cart = await Cart.create({
           user: req.user._id,
-          items: [{ product: productId, quantity: quantity || 1, price: price || product.price }]
+          items: [{ product: productId, quantity: quantity || 1, price: product.price }]
         });
       } catch (createErr) {
         // Handle duplicate key error if another concurrent request just created it
         if (createErr.code === 11000) {
           cart = await Cart.findOneAndUpdate(
             { user: req.user._id },
-            { $push: { items: { product: productId, quantity: quantity || 1, price: price || product.price } } },
+            { $push: { items: { product: productId, quantity: quantity || 1, price: product.price } } },
             { returnDocument: 'after' }
           );
         } else {
@@ -236,14 +236,21 @@ exports.mergeCart = async (req, res) => {
           continue;
         }
 
+        const dbProduct = await Product.findById(idStr);
+        if (!dbProduct) {
+          console.warn(`[Cart] Skipping merge of non-existent product: "${idStr}"`);
+          continue;
+        }
+
         const itemIndex = cart.items.findIndex(ci => ci && ci.product && String(ci.product._id || ci.product) === idStr);
         if (itemIndex > -1) {
           cart.items[itemIndex].quantity += (item.quantity || 1);
+          cart.items[itemIndex].price = dbProduct.price; // Re-sync price
         } else {
           cart.items.push({ 
             product: idStr, 
             quantity: item.quantity || 1, 
-            price: item.price || 0 
+            price: dbProduct.price 
           });
         }
       }

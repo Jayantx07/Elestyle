@@ -59,5 +59,18 @@ export const cartService = {
       body: JSON.stringify({ localItems }),
     });
     return res;
+  },
+
+  async validateCoupon(code: string, items: { productId: string; quantity: number }[], accessToken?: string | null) {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+    const res = await apiClient('/api/v1/coupons/validate', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ code, items }),
+    });
+    return res;
   }
 };

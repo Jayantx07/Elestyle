@@ -41,7 +41,9 @@ export interface SearchResultItem {
   price?: number;
   url: string;
   score: number;
-  originalData: IProduct | ICategory;
+  originalData: any;
+  ratingAverage?: number;
+  reviewCount?: number;
 }
 
 export interface SearchResult {

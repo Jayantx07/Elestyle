@@ -2,6 +2,7 @@ import React from 'react';
 import { Typography } from '../atoms/Typography';
 import { Button } from '../atoms/Button';
 import { AccordionItem } from '../molecules/AccordionItem';
+import { Link } from 'react-router-dom';
 
 export const FAQSection: React.FC = () => {
   const faqs = [
@@ -47,7 +48,9 @@ export const FAQSection: React.FC = () => {
           <Typography variant="body" className="mb-8 max-w-sm">
             Need more help? We're here for you.
           </Typography>
-          <Button variant="primary">CONTACT US</Button>
+          <Link to="/contact">
+            <Button variant="primary">CONTACT US</Button>
+          </Link>
         </div>
         
         <div className="lg:w-2/3">

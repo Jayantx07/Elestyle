@@ -46,6 +46,11 @@ export interface AdminProduct {
   searchKeywords?: string[];
   status: 'active' | 'inactive';
   visibility?: 'public' | 'hidden';
+  lowStockAlertActive?: boolean;
+  lowStockAlertThreshold?: number;
+  lowStockAlertMessage?: string;
+  paymentMethod?: string[];
+  returnWarranty?: number;
   images: ImageMetadata[];
   featured: boolean;
   schemaVersion?: number;

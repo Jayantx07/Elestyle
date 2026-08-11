@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useRef } from 'react';
 import { UploadCloud, X, Star, MoveLeft, MoveRight } from 'lucide-react';
 

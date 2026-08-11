@@ -2,6 +2,8 @@ const Product = require('../models/Product');
 const Category = require('../models/Category');
 const QueryBuilder = require('../utils/QueryBuilder');
 const cloudinaryCleanup = require('../utils/cloudinaryCleanup');
+const eventService = require('../services/eventService');
+const cacheManager = require('../utils/cacheManager');
 
 exports.getProducts = async (req, res) => {
   try {
@@ -48,6 +50,12 @@ exports.createProduct = async (req, res) => {
   try {
     const product = new Product(req.body);
     await product.save();
+    
+    // Clear product-related caches
+    await cacheManager.clearPattern('facets:public');
+    await cacheManager.clearPattern('products:featured');
+    
+    eventService.dispatchInvalidation('catalog', 'product', product._id);
     res.status(201).json({ success: true, message: 'Product created successfully', data: product });
   } catch (error) {
     console.error('Error creating product:', error);
@@ -79,6 +87,16 @@ exports.updateProduct = async (req, res) => {
     if (req.body.images && Array.isArray(req.body.images)) {
       await cloudinaryCleanup.cleanupReplacedImages(oldProduct.images, req.body.images);
     }
+    
+    // Clear relevant caches
+    await cacheManager.del(`product:slug:${oldProduct.slug}`);
+    if (updatedProduct.slug && updatedProduct.slug !== oldProduct.slug) {
+      await cacheManager.del(`product:slug:${updatedProduct.slug}`);
+    }
+    await cacheManager.clearPattern('facets:public');
+    await cacheManager.clearPattern('products:featured');
+    
+    eventService.dispatchInvalidation('catalog', 'product', updatedProduct._id);
 
     res.status(200).json({ success: true, message: 'Product updated successfully', data: updatedProduct });
   } catch (error) {
@@ -107,6 +125,8 @@ exports.deleteProduct = async (req, res) => {
         await Product.findByIdAndDelete(req.params.id);
       }
     }
+
+    eventService.dispatchInvalidation('catalog', 'product', req.params.id);
 
     res.status(200).json({ success: true, message: 'Product deleted successfully' });
   } catch (error) {

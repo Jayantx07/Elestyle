@@ -5,9 +5,13 @@ import type { CartItem } from '../../contexts/CartContext';
 export interface CartSummaryProps {
   items: CartItem[];
   subtotal: number;
+  discount: number;
   shipping: number;
   tax: number;
   grandTotal: number;
+  coupon: string | null;
+  couponError: string | null;
+  onApplyCoupon: (code: string) => void;
   onCheckout: () => void;
   onContinueShopping: () => void;
 }
@@ -15,12 +19,21 @@ export interface CartSummaryProps {
 export const CartSummary: React.FC<CartSummaryProps> = ({
   items,
   subtotal,
+  discount,
   shipping,
   tax,
   grandTotal,
+  coupon,
+  couponError,
+  onApplyCoupon,
   onCheckout,
   onContinueShopping,
 }) => {
+  const [couponInput, setCouponInput] = React.useState(coupon || '');
+  
+  React.useEffect(() => {
+    setCouponInput(coupon || '');
+  }, [coupon]);
   const formatPrice = (value: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
 
@@ -38,6 +51,12 @@ export const CartSummary: React.FC<CartSummaryProps> = ({
           <span className="font-sans uppercase tracking-[0.16em]">Subtotal</span>
           <span className="font-sans font-medium text-charcoal">{formatPrice(subtotal)}</span>
         </div>
+        {discount > 0 && (
+          <div className="flex items-center justify-between gap-6 text-[13px] text-green-600">
+            <span className="font-sans uppercase tracking-[0.16em]">Discount</span>
+            <span className="font-sans font-medium">-{formatPrice(discount)}</span>
+          </div>
+        )}
         <div className="flex items-center justify-between gap-6 text-[13px] text-black/55">
           <span className="font-sans uppercase tracking-[0.16em]">Shipping</span>
           <span className="font-sans font-medium text-charcoal">{formatPrice(shipping)}</span>
@@ -55,6 +74,20 @@ export const CartSummary: React.FC<CartSummaryProps> = ({
         <span className="font-fraunces text-[30px] leading-none text-charcoal">
           {formatPrice(grandTotal)}
         </span>
+      </div>
+
+      <div className="mt-6 flex flex-col gap-2">
+        <div className="flex gap-2">
+          <input 
+            type="text" 
+            placeholder="Coupon Code" 
+            value={couponInput}
+            onChange={(e) => setCouponInput(e.target.value)}
+            className="flex-1 px-4 py-3 rounded-full border border-black/10 focus:outline-none focus:border-black text-[13px]"
+          />
+          <Button variant="outline" onClick={() => onApplyCoupon(couponInput)} className="rounded-full px-6">Apply</Button>
+        </div>
+        {couponError && <p className="text-red-500 text-xs px-4">{couponError}</p>}
       </div>
 
       <div className="mt-8 space-y-3">

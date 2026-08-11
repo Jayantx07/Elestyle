@@ -34,6 +34,20 @@ export interface PublicProduct {
   reviewCount: number;
   images: { secure_url: string; alt?: string; isFeatured: boolean }[];
   featured: boolean;
+  handmadeTime?: string;
+  countryOfOrigin?: string;
+  weight?: string;
+  dimensions?: { length?: number; width?: number; height?: number; unit?: string };
+  sku?: string;
+  brand?: string;
+  availability?: 'In Stock' | 'Pre-Order' | 'Out of Stock';
+  attributes?: { key: string; label: string; value: any; type: 'String' | 'Number' | 'Boolean' | 'Date' }[];
+  stock?: number;
+  lowStockAlertActive?: boolean;
+  lowStockAlertThreshold?: number;
+  lowStockAlertMessage?: string;
+  paymentMethod?: string[];
+  returnWarranty?: number;
 }
 
 export interface ProductQueryParams {

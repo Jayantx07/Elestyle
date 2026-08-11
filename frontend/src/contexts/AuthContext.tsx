@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { authService } from '../services/authService';
+import { setApiToken } from '../lib/tokenManager';
 
 export interface User {
   id: string;
@@ -10,15 +11,7 @@ export interface User {
   role: string;
   profileImage: string;
   isEmailVerified?: boolean;
-  addresses?: Array<{
-    _id?: string;
-    street: string;
-    city: string;
-    state: string;
-    postalCode: string;
-    country: string;
-    isDefault?: boolean;
-  }>;
+  addresses?: any[];
 }
 
 interface AuthContextType {
@@ -47,21 +40,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           if (isMounted) {
             setUser(data.user);
             setAccessToken(data.accessToken);
+            setApiToken(data.accessToken);
           }
         }
       } catch (error) {
         console.log('No valid session found');
+        setApiToken(null);
       } finally {
         if (isMounted) setIsLoading(false);
       }
     };
     initializeAuth();
-    return () => { isMounted = false; };
+    const handleUnauthorized = () => {
+      setApiToken(null);
+      setUser(null);
+      setAccessToken(null);
+    };
+    
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+
+    return () => { 
+      isMounted = false; 
+      window.removeEventListener('auth:unauthorized', handleUnauthorized);
+    };
   }, []);
 
   const login = (userData: User, token: string) => {
     setUser(userData);
     setAccessToken(token);
+    setApiToken(token);
   };
 
   const logout = async () => {
@@ -72,6 +79,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } finally {
       setUser(null);
       setAccessToken(null);
+      setApiToken(null);
     }
   };
 

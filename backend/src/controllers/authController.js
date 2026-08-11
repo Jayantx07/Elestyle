@@ -1,4 +1,5 @@
 const authService = require('../services/authService');
+const mediaService = require('../services/mediaService');
 
 const setTokenCookie = (res, token) => {
   res.cookie('refreshToken', token, {
@@ -136,6 +137,30 @@ exports.updateAddresses = async (req, res, next) => {
   }
 };
 
+exports.uploadAvatar = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Please upload an image file' });
+    }
+
+    // Upload to Cloudinary under ElleStyle/Avatars/<userId>
+    const folderPath = `ElleStyle/Avatars/${req.user._id}`;
+    const result = await mediaService.uploadImage(req.file.buffer, folderPath);
+
+    // Update user profile image
+    req.user.profileImage = result.secure_url;
+    await req.user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Avatar uploaded successfully',
+      user: formatUserResponse(req.user),
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 exports.forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
@@ -206,5 +231,123 @@ exports.getMe = async (req, res, next) => {
     });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// Address Management
+exports.addAddress = async (req, res, next) => {
+  try {
+    const { addressLine1, addressLine2, city, state, postalCode, country, isDefault } = req.body;
+    
+    if (isDefault) {
+      req.user.addresses.forEach(addr => {
+        addr.isDefault = false;
+      });
+    }
+
+    req.user.addresses.push({ addressLine1, addressLine2, city, state, postalCode, country, isDefault });
+    
+    // If it's the first address, make it default
+    if (req.user.addresses.length === 1) {
+      req.user.addresses[0].isDefault = true;
+    }
+
+    await req.user.save();
+
+    res.status(200).json({
+      success: true,
+      addresses: req.user.addresses,
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+exports.updateAddress = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { addressLine1, addressLine2, city, state, postalCode, country, isDefault } = req.body;
+
+    const address = req.user.addresses.id(id);
+    if (!address) {
+      return res.status(404).json({ success: false, message: 'Address not found' });
+    }
+
+    if (isDefault) {
+      req.user.addresses.forEach(addr => {
+        addr.isDefault = false;
+      });
+    }
+
+    address.addressLine1 = addressLine1 || address.addressLine1;
+    address.addressLine2 = addressLine2 !== undefined ? addressLine2 : address.addressLine2;
+    address.city = city || address.city;
+    address.state = state || address.state;
+    address.postalCode = postalCode || address.postalCode;
+    address.country = country || address.country;
+    if (isDefault !== undefined) {
+      address.isDefault = isDefault;
+    }
+
+    await req.user.save();
+
+    res.status(200).json({
+      success: true,
+      addresses: req.user.addresses,
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+exports.deleteAddress = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    
+    const address = req.user.addresses.id(id);
+    if (!address) {
+      return res.status(404).json({ success: false, message: 'Address not found' });
+    }
+
+    req.user.addresses.pull(id);
+    
+    // If the deleted address was default, make the first remaining one default
+    if (address.isDefault && req.user.addresses.length > 0) {
+      req.user.addresses[0].isDefault = true;
+    }
+
+    await req.user.save();
+
+    res.status(200).json({
+      success: true,
+      addresses: req.user.addresses,
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+exports.setDefaultAddress = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    
+    const address = req.user.addresses.id(id);
+    if (!address) {
+      return res.status(404).json({ success: false, message: 'Address not found' });
+    }
+
+    req.user.addresses.forEach(addr => {
+      addr.isDefault = false;
+    });
+
+    address.isDefault = true;
+    await req.user.save();
+
+    res.status(200).json({
+      success: true,
+      addresses: req.user.addresses,
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
   }
 };

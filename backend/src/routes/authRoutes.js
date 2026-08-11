@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
+const upload = require('../middleware/uploadMiddleware');
 const rateLimit = require('express-rate-limit');
 
 // Rate limiting for auth routes
@@ -26,5 +27,12 @@ router.post('/logout', authController.logout);
 router.get('/me', protect, authController.getMe);
 router.put('/profile', protect, authController.updateProfile);
 router.put('/addresses', protect, authController.updateAddresses);
+router.post('/avatar', protect, upload.single('avatar'), authController.uploadAvatar);
+
+// Address routes
+router.post('/addresses', protect, authController.addAddress);
+router.put('/addresses/:id', protect, authController.updateAddress);
+router.delete('/addresses/:id', protect, authController.deleteAddress);
+router.put('/addresses/:id/default', protect, authController.setDefaultAddress);
 
 module.exports = router;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ProfileCard } from '../components/organisms/ProfileCard';
 import { ProfileSettingsList, type SettingItem } from '../components/organisms/ProfileSettingsList';
@@ -10,8 +10,7 @@ import { Button } from '../components/atoms/Button';
 type Tab = 'overview' | 'orders' | 'addresses';
 
 const ProfilePage: React.FC = () => {
-  const { user, accessToken, updateUser, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user, accessToken, updateUser } = useAuth();
 
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   
@@ -19,8 +18,10 @@ const ProfilePage: React.FC = () => {
   const [editName, setEditName] = useState(user?.name || '');
   const [editPhone, setEditPhone] = useState(user?.phone || '');
   const [isSaving, setIsSaving] = useState(false);
-  const [editError, setEditError] = useState('');
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
@@ -37,7 +38,6 @@ const ProfilePage: React.FC = () => {
   });
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
     if (user) {
       setEditName(user.name || '');
       setEditPhone(user.phone || '');
@@ -68,28 +68,47 @@ const ProfilePage: React.FC = () => {
     e.preventDefault();
     if (!accessToken) return;
     setIsSaving(true);
-    setEditError('');
+    setError('');
+    setSuccess('');
 
     try {
       const data = await authService.updateProfile({ name: editName, phone: editPhone }, accessToken);
       if (data.success && data.user) {
         updateUser(data.user);
         setIsEditing(false);
+        setSuccess('Profile updated successfully.');
       } else {
-        setEditError(data.message || 'Failed to update profile');
+        setError(data.message || 'Failed to update profile');
       }
     } catch (err: any) {
-      setEditError(err.message || 'An error occurred updating profile');
+      setError(err.message || 'An error occurred updating profile');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !accessToken) return;
 
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !accessToken) return;
+
+    try {
+      setError('');
+      setSuccess('');
+      const data = await authService.uploadAvatar(file, accessToken);
+      if (data.success && data.user) {
+        updateUser(data.user);
+        setSuccess('Avatar updated successfully.');
+      } else {
+        setError(data.message || 'Failed to update avatar');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred updating avatar');
+    }
+  };
   const handleSaveAddress = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!accessToken || !user) return;
@@ -179,20 +198,21 @@ const ProfilePage: React.FC = () => {
   const handleToggleChange = (id: string, newValue: boolean) => {
     if (id === 'notification') setNotificationsEnabled(newValue);
   };
-
-  const verificationProgress = user?.isEmailVerified ? 100 : 50;
+  };
 
   return (
     <div className="min-h-screen pt-32 pb-24 md:pt-40 px-4 md:px-8 bg-[#EAF3EB]">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between md:justify-start gap-4 mb-8">
           <button 
-            onClick={() => navigate(-1)}
-            className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center md:hidden"
+            onClick={() => {
+              setIsEditing(true);
+              setSuccess('');
+              setError('');
+            }}
+            className="px-4 py-2 rounded-xl text-sm font-semibold bg-gray-100 text-gray-900 hover:bg-gray-200 transition"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
+            Edit Profile
           </button>
           <h1 className="font-fraunces font-medium text-2xl md:text-4xl text-center flex-1 md:flex-none text-gray-900">
             Account
@@ -209,6 +229,14 @@ const ProfilePage: React.FC = () => {
               avatarUrl={user?.profileImage || ''}
               verificationProgress={verificationProgress}
               onEditProfile={() => setIsEditing(true)}
+              onAvatarClick={() => fileInputRef.current?.click()}
+            />
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden" 
+              accept="image/jpeg, image/png, image/webp"
+              onChange={handleAvatarChange}
             />
             
             <div className="bg-white rounded-3xl p-4 shadow-sm border border-black/5 mt-4">
@@ -404,6 +432,8 @@ const ProfilePage: React.FC = () => {
           </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 };

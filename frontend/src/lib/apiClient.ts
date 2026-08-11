@@ -1,3 +1,5 @@
+import { getApiToken } from './tokenManager';
+
 export class ApiError extends Error {
   status: number;
   data: any;
@@ -22,6 +24,16 @@ interface FetchOptions extends RequestInit {
 export async function apiClient<T = any>(url: string, options: FetchOptions = {}): Promise<T> {
   const { retries = 3, baseDelay = 500, ...fetchOptions } = options;
   const method = (fetchOptions.method || 'GET').toUpperCase();
+  
+  // Attach Authorization header if token exists
+  const token = getApiToken();
+  if (token) {
+    fetchOptions.headers = {
+      ...fetchOptions.headers,
+      Authorization: `Bearer ${token}`
+    };
+  }
+
   const isIdempotent = ['GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS'].includes(method);
   const actualRetries = isIdempotent ? retries : (options.retries !== undefined ? options.retries : 0);
   
@@ -30,6 +42,35 @@ export async function apiClient<T = any>(url: string, options: FetchOptions = {}
       const response = await fetch(url, fetchOptions);
       
       if (!response.ok) {
+        // Automatically refresh token on 401 Unauthorized
+        if (response.status === 401 && !(options as any)._isRetry && !url.includes('/api/v1/auth/')) {
+          try {
+            const refreshRes = await fetch('/api/v1/auth/refresh-token', { method: 'POST' });
+            if (refreshRes.ok) {
+              const data = await refreshRes.json();
+              if (data.success && data.accessToken) {
+                const { setApiToken } = await import('./tokenManager');
+                setApiToken(data.accessToken);
+                // Retry the request with the new token
+                return await apiClient<T>(url, { 
+                  ...options, 
+                  _isRetry: true,
+                  headers: {
+                    ...options.headers,
+                    Authorization: `Bearer ${data.accessToken}`
+                  }
+                } as FetchOptions);
+              }
+            }
+          } catch (e) {
+            console.error('Failed to auto-refresh token', e);
+          }
+          // If refresh fails, dispatch a custom event to force logout
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new Event('auth:unauthorized'));
+          }
+        }
+
         // Transient errors that should be retried (Bad Gateway, Service Unavailable, Gateway Timeout)
         const isTransient = [502, 503, 504].includes(response.status);
         if (isTransient && attempt < actualRetries) {

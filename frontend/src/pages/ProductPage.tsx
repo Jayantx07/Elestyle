@@ -48,6 +48,35 @@ const ProductPage: React.FC = () => {
             console.error('Failed to fetch reviews', e);
           }
 
+          const activeVariants = (p.variants || []).filter((v: any) => v.isActive !== false);
+          let displayVariants = activeVariants;
+          
+          if (activeVariants.length > 0) {
+            // Priority 1/2: Base product color from attributes
+            const attrColor = p.attributes?.find((a: any) => a.key.toLowerCase() === 'color' || a.key.toLowerCase() === 'basecolor');
+            // Priority 3: Product name, Priority 4: 'Default'
+            const baseColorName = attrColor?.value || p.name || 'Default';
+            
+            // Try to find matching hex if it's a known color in swatches
+            const matchingSavedColor = p.colors?.find((c: any) => c.name.toLowerCase() === baseColorName.toLowerCase());
+            
+            // Priority 1: Explicit basecolorhex attribute
+            const attrColorHex = p.attributes?.find((a: any) => a.key.toLowerCase() === 'basecolorhex');
+            const baseColorHex = attrColorHex?.value || matchingSavedColor?.hex || '';
+            
+            const baseVariant = {
+              _id: 'base',
+              name: baseColorName,
+              price: p.price,
+              image: p.images?.[0]?.secure_url || '',
+              colorName: baseColorName,
+              colorHex: baseColorHex,
+              isActive: true,
+              isBase: true
+            };
+            displayVariants = [baseVariant, ...activeVariants];
+          }
+
           const mappedProduct = {
             id: p._id,
             category: p.category?.name?.toLowerCase().replace(/ /g, '-') || 'default',
@@ -57,10 +86,26 @@ const ProductPage: React.FC = () => {
             imageSrc: p.images?.[0]?.secure_url || '',
             thumbnails: p.images?.map((img: any) => img.secure_url) || [],
             mainNotes: p.tags || [],
-            variants: (p.variants || []).filter((v: any) => v.isActive !== false),
+            variants: displayVariants,
             ratingAverage: p.ratingAverage || 0,
             reviewCount: p.reviewCount || 0,
             reviews: reviews,
+            handmadeTime: p.handmadeTime,
+            countryOfOrigin: p.countryOfOrigin,
+            material: p.material,
+            weight: p.weight,
+            dimensions: p.dimensions,
+            sku: p.sku,
+            brand: p.brand,
+            availability: p.availability,
+            attributes: p.attributes || [],
+            stock: p.stock,
+            compareAtPrice: p.compareAtPrice,
+            lowStockAlertActive: p.lowStockAlertActive,
+            lowStockAlertThreshold: p.lowStockAlertThreshold,
+            lowStockAlertMessage: p.lowStockAlertMessage,
+            paymentMethod: p.paymentMethod,
+            returnWarranty: p.returnWarranty,
             relatedProducts: [] // We'll set this separately
           };
           

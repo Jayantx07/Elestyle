@@ -1,27 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Package, ShoppingCart, Users, DollarSign, TrendingUp, AlertCircle } from 'lucide-react';
 import { PageHeader } from '../components/shared/PageHeader';
 import { StatusBadge } from '../components/shared/StatusBadge';
 import { adminDashboardService, type DashboardStats } from '../services/dashboardService';
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: stats, isLoading: loading, isError, error: queryError } = useQuery({
+    queryKey: ['adminDashboard'],
+    queryFn: adminDashboardService.getStats
+  });
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const data = await adminDashboardService.getStats();
-        setStats(data);
-      } catch (err) {
-        setError('Unable to load dashboard data. Please make sure the backend is running.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
-  }, []);
+  const error = isError ? (queryError as Error)?.message || 'Unable to load dashboard data. Please make sure the backend is running.' : null;
 
   if (loading) {
     return (

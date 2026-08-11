@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import AppLayout from '@/components/layout/AppLayout';
 import NotFound from '@/pages/NotFound';
 import Home from '@/pages/Home';
@@ -14,6 +14,12 @@ import AboutPage from '@/pages/AboutPage';
 import ContactPage from '@/pages/ContactPage';
 import CheckoutPage from '@/pages/CheckoutPage';
 
+// Account Dashboard Imports
+import AccountLayout from '@/components/layout/AccountLayout';
+import CustomerCouponsPage from '@/pages/account/CouponsPage';
+import CustomerAddressesPage from '@/pages/account/AddressesPage';
+import CustomerSettingsPage from '@/pages/account/SettingsPage';
+
 // Auth Imports
 import ProtectedRoute from '@/components/common/ProtectedRoute';
 import LoginPage from '@/pages/auth/LoginPage';
@@ -21,6 +27,8 @@ import SignupPage from '@/pages/auth/SignupPage';
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from '@/pages/auth/ResetPasswordPage';
 import VerifyEmailPage from '@/pages/auth/VerifyEmailPage';
+import CustomerOrdersPage from '@/pages/OrdersPage';
+import CustomerOrderDetailsPage from '@/pages/CustomerOrderDetailsPage';
 
 // Admin Imports
 import AdminRouteGuard from '@/admin/components/layout/AdminRouteGuard';
@@ -76,20 +84,40 @@ export const router = createBrowserRouter([
         path: 'categories',
         element: <CategoriesPage />,
       },
+      // Redirects for old public routes
       {
         path: 'wishlist',
-        element: <WishlistPage />,
+        element: <Navigate to="/account/wishlist" replace />,
       },
       {
         element: <ProtectedRoute />,
         children: [
           {
-            path: 'profile',
-            element: <ProfilePage />,
+            path: 'account',
+            element: <AccountLayout />,
+            children: [
+              { index: true, element: <Navigate to="profile" replace /> },
+              { path: 'profile', element: <ProfilePage /> },
+              { path: 'wishlist', element: <WishlistPage /> },
+              { path: 'orders', element: <CustomerOrdersPage /> },
+              { path: 'orders/:id', element: <CustomerOrderDetailsPage /> },
+              { path: 'coupons', element: <CustomerCouponsPage /> },
+              { path: 'addresses', element: <CustomerAddressesPage /> },
+              { path: 'settings', element: <CustomerSettingsPage /> },
+            ],
           },
           {
             path: 'checkout',
             element: <CheckoutPage />,
+          },
+          // Redirects for old protected routes
+          {
+            path: 'profile',
+            element: <Navigate to="/account/profile" replace />,
+          },
+          {
+            path: 'orders',
+            element: <Navigate to="/account/orders" replace />,
           },
         ],
       },

@@ -46,7 +46,6 @@ async function buildProductFilterQuery(query, params) {
     const subConditions = [
       { subCategory: { $in: objectIds } },
       { legacySubCategory: { $in: strings } },
-      { subCategory: { $in: strings } },
     ];
 
     if (filter.$or) {
@@ -259,7 +258,16 @@ exports.getProductFacets = async (req, res) => {
             matchStage.category = catDoc._id;
             categoryObj = catDoc;
           } else {
-            return {};
+            return {
+              subCategories: [],
+              colors: [],
+              materials: [],
+              availability: [],
+              rating: [],
+              priceMin: 0,
+              priceMax: 10000,
+              priceRange: { min: 0, max: 10000 },
+            };
           }
         }
       }

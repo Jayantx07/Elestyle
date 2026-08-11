@@ -6,7 +6,7 @@ import { Typography } from '../components/atoms/Typography';
 import { useCart } from '../contexts/CartContext';
 
 const CartPage: React.FC = () => {
-  const { items, removeFromCart, updateQuantity, subtotal, shipping, tax, grandTotal } = useCart();
+  const { items, removeFromCart, updateQuantity, subtotal, discount, shipping, tax, grandTotal, applyCoupon, coupon, couponError } = useCart();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -65,9 +65,13 @@ const CartPage: React.FC = () => {
               <CartSummary
                 items={items}
                 subtotal={subtotal}
+                discount={discount}
                 shipping={shipping}
                 tax={tax}
                 grandTotal={grandTotal}
+                coupon={coupon}
+                couponError={couponError}
+                onApplyCoupon={applyCoupon}
                 onCheckout={handleCheckout}
                 onContinueShopping={handleContinueShopping}
               />

@@ -28,7 +28,9 @@ const authRoutes = require('../authRoutes');
 const cartRoutes = require('../cartRoutes');
 const subCategoryRoutes = require('../subCategoryRoutes');
 const filterRoutes = require('../filterRoutes');
-const orderRoutes = require('../orderRoutes');
+const couponRoutes = require('../couponRoutes');
+
+const { protect, authorizeRoles } = require('../../middleware/auth');
 
 router.use('/auth', authRoutes);
 router.use('/upload', uploadRoutes);
@@ -40,7 +42,13 @@ router.use('/reviews', reviewStandaloneRoutes);
 router.use('/landing-banners', landingBannerRoutes);
 router.use('/checkout', checkoutRoutes);
 router.use('/cart', cartRoutes);
-router.use('/orders', orderRoutes);
+router.use('/coupons', couponRoutes);
+router.use('/payments', require('../paymentRoutes'));
+router.use('/orders', require('../orderRoutes'));
+router.use('/wishlist', require('../wishlistRoutes'));
+
+// Apply auth protection to all admin routes
+router.use('/admin', protect, authorizeRoles('admin'));
 router.use('/admin/dashboard', adminDashboardRoutes);
 router.use('/admin/products', adminProductRoutes);
 router.use('/admin/categories', adminCategoryRoutes);

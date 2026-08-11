@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { couponKeys } from '@/lib/queryKeys';
 import { Plus } from 'lucide-react';
 import { PageHeader } from '../components/shared/PageHeader';
 import { DataTable, type Column } from '../components/shared/DataTable';
@@ -9,28 +11,16 @@ import { adminCouponService, type AdminCoupon } from '../services/couponService'
 
 export default function CouponsPage() {
   const navigate = useNavigate();
-  const [coupons, setCoupons] = useState<AdminCoupon[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [couponToDelete, setCouponToDelete] = useState<AdminCoupon | null>(null);
-
-  const fetchCoupons = async () => {
-    try {
-      setLoading(true);
-      const data = await adminCouponService.getCoupons();
-      setCoupons(data);
-    } catch (error) {
-      console.error('Failed to fetch coupons', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCoupons();
-  }, []);
+  
+  const { data: coupons = [], isLoading: loading } = useQuery({
+    queryKey: couponKeys.all,
+    queryFn: adminCouponService.getCoupons
+  });
 
   const handleDeleteClick = (e: React.MouseEvent, coupon: AdminCoupon) => {
     e.stopPropagation();
@@ -42,7 +32,7 @@ export default function CouponsPage() {
     if (!couponToDelete) return;
     try {
       await adminCouponService.deleteCoupon(couponToDelete._id);
-      setCoupons(coupons.filter(c => c._id !== couponToDelete._id));
+      queryClient.invalidateQueries({ queryKey: couponKeys.all });
     } catch (error) {
       console.error('Failed to delete coupon', error);
     } finally {
