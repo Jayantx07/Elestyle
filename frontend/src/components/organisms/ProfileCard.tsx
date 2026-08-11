@@ -7,6 +7,7 @@ export interface ProfileCardProps {
   avatarUrl: string;
   verificationProgress: number; // 0 to 100
   onEditProfile?: () => void;
+  onAvatarClick?: () => void;
 }
 
 export const ProfileCard: React.FC<ProfileCardProps> = ({
@@ -15,18 +16,28 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   phone,
   avatarUrl,
   verificationProgress,
-  onEditProfile
+  onEditProfile,
+  onAvatarClick
 }) => {
   return (
     <div className="relative pt-16">
       {/* Avatar Container (Positioned absolutely to overflow the card) */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
-        <div className="w-32 h-32 rounded-full overflow-hidden shadow-md ring-4 ring-[#EAF3EB] bg-white flex items-center justify-center">
+        <div 
+          className="w-32 h-32 rounded-full overflow-hidden shadow-md ring-4 ring-[#EAF3EB] bg-white flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity relative group"
+          onClick={onAvatarClick}
+        >
           <img 
             src={avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=random`} 
             alt={name} 
             className="w-full h-full object-cover" 
           />
+          <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+              <circle cx="12" cy="13" r="4"></circle>
+            </svg>
+          </div>
         </div>
       </div>
 

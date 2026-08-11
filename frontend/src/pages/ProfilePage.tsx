@@ -301,12 +301,12 @@ const ProfilePage: React.FC = () => {
                         <div>
                           <p className="text-sm font-medium text-gray-900">Order #{order._id.slice(-6).toUpperCase()}</p>
                           <p className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</p>
-                          <p className="text-sm font-medium mt-1">${order.grandTotal.toFixed(2)} - <span className="text-emerald-600">{order.status}</span></p>
+                          <p className="text-sm font-medium mt-1">${order.grandTotal?.toFixed(2)} - <span className="text-emerald-600">{order.orderStatus}</span></p>
                         </div>
                         <div className="flex -space-x-2">
                           {order.items.slice(0, 3).map((item, idx) => (
                             <div key={idx} className="w-10 h-10 rounded-full border-2 border-white bg-gray-100 overflow-hidden">
-                              <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                              <img src={item.product?.images?.[0] || ''} alt={item.product?.name || 'Product'} className="w-full h-full object-cover" />
                             </div>
                           ))}
                           {order.items.length > 3 && (
