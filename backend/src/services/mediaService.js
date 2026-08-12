@@ -51,13 +51,48 @@ const mediaService = {
   },
 
   /**
+   * Upload a video file buffer to Cloudinary
+   * @param {Buffer} fileBuffer - The file buffer from multer
+   * @param {string} folderPath - The target folder path in Cloudinary
+   * @returns {Promise<Object>} The Cloudinary result object
+   */
+  uploadVideo: (fileBuffer, folderPath) => {
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: folderPath,
+          resource_type: 'video',
+          // Auto convert video format for web delivery via delivery URLs, 
+          // but we specify video here to ensure it accepts large files.
+        },
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result);
+        }
+      );
+
+      streamifier.createReadStream(fileBuffer).pipe(uploadStream);
+    });
+  },
+
+  /**
    * Delete an image from Cloudinary by its public ID
    * @param {string} publicId - The Cloudinary public ID
    * @returns {Promise<Object>} The Cloudinary result object
    */
   deleteImage: (publicId) => {
+    return mediaService.deleteMedia(publicId, 'image');
+  },
+
+  /**
+   * Delete a media asset from Cloudinary by its public ID
+   * @param {string} publicId - The Cloudinary public ID
+   * @param {string} resourceType - 'image' or 'video'
+   * @returns {Promise<Object>} The Cloudinary result object
+   */
+  deleteMedia: (publicId, resourceType = 'image') => {
     return new Promise((resolve, reject) => {
-      cloudinary.uploader.destroy(publicId, (error, result) => {
+      cloudinary.uploader.destroy(publicId, { resource_type: resourceType }, (error, result) => {
         if (error) return reject(error);
         resolve(result);
       });

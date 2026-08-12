@@ -206,11 +206,11 @@ export default function LandingPage() {
   const filteredBanners = useMemo(() => {
     const normalized = search.toLowerCase();
     return orderedBanners.filter((banner) => {
-      const categoryName = typeof banner.category === 'object' ? banner.category.name : '';
+      const categoryName = typeof banner.category === 'object' && banner.category ? banner.category.name : '';
       return (
-        banner.title.toLowerCase().includes(normalized) ||
-        banner.subtitle.toLowerCase().includes(normalized) ||
-        categoryName.toLowerCase().includes(normalized)
+        (banner.title || '').toLowerCase().includes(normalized) ||
+        (banner.subtitle || '').toLowerCase().includes(normalized) ||
+        (categoryName || '').toLowerCase().includes(normalized)
       );
     });
   }, [orderedBanners, search]);

@@ -52,6 +52,8 @@ import CouponsPage from '@/admin/pages/CouponsPage';
 import CouponFormPage from '@/admin/pages/CouponFormPage';
 import AnalyticsPage from '@/admin/pages/AnalyticsPage';
 import LandingPage from '@/admin/pages/LandingPage';
+import VideoHighlightsPage from '@/admin/pages/VideoHighlightsPage';
+import FeatureHighlightsPage from '@/admin/pages/FeatureHighlightsPage';
 import SettingsPage from '@/admin/pages/SettingsPage';
 
 export const router = createBrowserRouter([
@@ -243,6 +245,14 @@ export const router = createBrowserRouter([
           {
             path: 'landing-page',
             element: <LandingPage />,
+          },
+          {
+            path: 'video-highlights',
+            element: <VideoHighlightsPage />,
+          },
+          {
+            path: 'feature-highlights',
+            element: <FeatureHighlightsPage />,
           },
           {
             path: 'settings',

@@ -29,8 +29,9 @@ const cloudinaryCleanup = {
   /**
    * Remove all associated media when an entity is permanently deleted or purged
    * @param {Array<Object|String>|Object|String} mediaAssets 
+   * @param {String} resourceType - 'image' or 'video'
    */
-  cleanupAssets: async (mediaAssets) => {
+  cleanupAssets: async (mediaAssets, resourceType = 'image') => {
     const assets = Array.isArray(mediaAssets) ? mediaAssets : [mediaAssets];
     const results = [];
 
@@ -38,7 +39,7 @@ const cloudinaryCleanup = {
       const publicId = cloudinaryCleanup.extractPublicId(asset);
       if (publicId) {
         try {
-          const res = await mediaService.deleteImage(publicId);
+          const res = await mediaService.deleteMedia(publicId, resourceType);
           results.push({ publicId, status: 'deleted', res });
         } catch (err) {
           console.error(`Failed to delete Cloudinary asset [${publicId}]:`, err.message);

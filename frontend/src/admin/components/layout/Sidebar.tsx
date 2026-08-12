@@ -12,6 +12,7 @@ import {
   Ticket, 
   BarChart, 
   ImageIcon,
+  Film,
   Settings 
 } from 'lucide-react';
 
@@ -28,6 +29,8 @@ const MENU_ITEMS = [
   { name: 'Coupons', icon: Ticket, path: '/admin/coupons' },
   { name: 'Analytics', icon: BarChart, path: '/admin/analytics' },
   { name: 'Landing Page', icon: ImageIcon, path: '/admin/landing-page' },
+  { name: 'Video Highlights', icon: Film, path: '/admin/video-highlights' },
+  { name: 'Feature Highlights', icon: ImageIcon, path: '/admin/feature-highlights' },
   { name: 'Settings', icon: Settings, path: '/admin/settings' },
 ];
 

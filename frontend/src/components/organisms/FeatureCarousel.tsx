@@ -1,57 +1,18 @@
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { FeatureCard } from '../molecules/FeatureCard';
+import { publicFeatureHighlightService } from '../../services/featureHighlightService';
+import { featureHighlightKeys } from '@/lib/queryKeys';
 
 export const FeatureCarousel: React.FC = () => {
-  const features = [
-    {
-      id: '1',
-      imageSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784625677/Bag_14_b6gksw.jpg',
-      altText: 'Macrame Bag',
-      badgeLabel: 'MACRAME BAGS',
-    },
-    {
-      id: '2',
-      imageSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784625411/Earring_4_hfyddr.jpg',
-      altText: 'Handmade Earring',
-      badgeLabel: 'HANDMADE EARRINGS',
-    },
-    {
-      id: '3',
-      imageSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784625405/Earring_9_uftsiq.jpg',
-      altText: 'Handmade Earring',
-      badgeLabel: 'HANDMADE EARRINGS',
-    },
-    {
-      id: '4',
-      imageSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784625345/Necklace_vm2g2r.jpg',
-      altText: 'Necklace',
-      badgeLabel: 'JEWELRY',
-    },
-    {
-      id: '5',
-      imageSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784625342/Necklace_5_oc2hpr.jpg',
-      altText: 'Necklace',
-      badgeLabel: 'JEWELRY',
-    },
-    {
-      id: '6',
-      imageSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784625343/Necklace_1_zkchxw.jpg',
-      altText: 'Necklace',
-      badgeLabel: 'JEWELRY',
-    },
-    {
-      id: '7',
-      imageSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784625719/Vanity_Bag_1_j0oxzi.jpg',
-      altText: 'Vanity Bag',
-      badgeLabel: 'VANITY BAGS',
-    },
-    {
-      id: '8',
-      imageSrc: 'https://res.cloudinary.com/gc1qeznc/image/upload/v1784625707/Bag_3_zhcatb.jpg',
-      altText: 'Macrame Bag',
-      badgeLabel: 'MACRAME BAGS',
-    },
-  ];
+  const { data: features = [], isLoading } = useQuery({
+    queryKey: featureHighlightKeys.lists(),
+    queryFn: publicFeatureHighlightService.getAll,
+  });
+
+  if (isLoading || features.length === 0) {
+    return null; // Or return a skeleton loader if desired, but returning null hides the empty section
+  }
 
   return (
     <section className="py-12 md:py-24 overflow-hidden" style={{ backgroundColor: 'var(--bg-page)' }}>
@@ -65,7 +26,7 @@ export const FeatureCarousel: React.FC = () => {
                 className="w-[260px] md:w-[320px] shrink-0"
                 imageSrc={feature.imageSrc}
                 altText={feature.altText}
-                badgeLabel={feature.badgeLabel}
+                badgeLabel={feature.category ? feature.category.name : ''}
               />
             ))}
           </div>
@@ -77,7 +38,7 @@ export const FeatureCarousel: React.FC = () => {
                 className="w-[260px] md:w-[320px] shrink-0"
                 imageSrc={feature.imageSrc}
                 altText={feature.altText}
-                badgeLabel={feature.badgeLabel}
+                badgeLabel={feature.category ? feature.category.name : ''}
               />
             ))}
           </div>

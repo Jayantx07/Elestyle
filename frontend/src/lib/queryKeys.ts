@@ -35,3 +35,19 @@ export const couponKeys = {
   details: () => [...couponKeys.all, 'detail'] as const,
   detail: (id: string) => [...couponKeys.details(), id] as const,
 };
+
+export const videoHighlightKeys = {
+  all: ['videoHighlights'] as const,
+  lists: () => [...videoHighlightKeys.all, 'list'] as const,
+  list: (filters: string) => [...videoHighlightKeys.lists(), { filters }] as const,
+  details: () => [...videoHighlightKeys.all, 'detail'] as const,
+  detail: (id: string) => [...videoHighlightKeys.details(), id] as const,
+};
+
+export const featureHighlightKeys = {
+  all: ['featureHighlights'] as const,
+  lists: () => [...featureHighlightKeys.all, 'list'] as const,
+  list: (filters: string) => [...featureHighlightKeys.lists(), { filters }] as const,
+  details: () => [...featureHighlightKeys.all, 'detail'] as const,
+  detail: (id: string) => [...featureHighlightKeys.details(), id] as const,
+};
