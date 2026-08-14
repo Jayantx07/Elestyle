@@ -50,7 +50,6 @@ exports.getSubCategories = async (req, res) => {
           $or: [
             { subCategory: { $in: subCatIds } },
             { legacySubCategory: { $in: subCatNames } },
-            { subCategory: { $in: subCatNames } },
           ],
           isDeleted: { $ne: true },
         },
@@ -102,10 +101,24 @@ exports.createSubCategory = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Parent Category does not exist' });
     }
 
-    const existing = await SubCategory.findOne({ category, name: { $regex: new RegExp(`^${name.trim()}$`, 'i') } });
+    const escapeRegex = (text) => text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+    const existing = await SubCategory.findOne({ category, name: { $regex: new RegExp(`^${escapeRegex(name.trim())}$`, 'i') } });
     if (existing) {
       return res.status(400).json({ success: false, message: 'SubCategory with this name already exists in this category' });
     }
+
+    // Ensure global slug uniqueness
+    const slugify = require('slugify');
+    let finalSlug = req.body.slug || slugify(name, { lower: true, strict: true });
+    let slugExists = await SubCategory.collection.findOne({ slug: finalSlug });
+    let counter = 1;
+    let baseSlug = finalSlug;
+    while (slugExists) {
+      finalSlug = `${baseSlug}-${counter}`;
+      slugExists = await SubCategory.collection.findOne({ slug: finalSlug });
+      counter++;
+    }
+    req.body.slug = finalSlug;
 
     const subCategory = await SubCategory.create(req.body);
     await cacheManager.clearPattern('subcategories');
@@ -114,7 +127,9 @@ exports.createSubCategory = async (req, res) => {
 
     res.status(201).json({ success: true, data: subCategory, message: 'SubCategory created successfully' });
   } catch (error) {
-    res.status(400).json({ success: false, message: 'Bad request', error: error.message });
+    console.error('CREATE SUBCAT ERROR:', error);
+    require('fs').appendFileSync('error_log.txt', new Date().toISOString() + ' CREATE SUBCAT ERROR: ' + (error.stack || error) + '\n');
+    res.status(400).json({ success: false, message: error.message || 'SERVER_CATCH_FALLBACK', error: error.message });
   }
 };
 
@@ -130,6 +145,20 @@ exports.updateSubCategory = async (req, res) => {
     delete updatePayload.updatedAt;
     delete updatePayload.slugHistory;
     delete updatePayload.schemaVersion;
+
+    // Ensure global slug uniqueness if it's changing
+    if (updatePayload.slug) {
+      let finalSlug = updatePayload.slug;
+      let slugExists = await SubCategory.collection.findOne({ slug: finalSlug, _id: { $ne: new mongoose.Types.ObjectId(req.params.id) } });
+      let counter = 1;
+      let baseSlug = finalSlug;
+      while (slugExists) {
+        finalSlug = `${baseSlug}-${counter}`;
+        slugExists = await SubCategory.collection.findOne({ slug: finalSlug, _id: { $ne: new mongoose.Types.ObjectId(req.params.id) } });
+        counter++;
+      }
+      updatePayload.slug = finalSlug;
+    }
 
     const subCategory = await SubCategory.findByIdAndUpdate(req.params.id, updatePayload, {
       returnDocument: 'after',
@@ -148,7 +177,8 @@ exports.updateSubCategory = async (req, res) => {
     res.status(200).json({ success: true, data: subCategory, message: 'SubCategory updated successfully' });
   } catch (error) {
     console.error('Update SubCategory error:', error);
-    res.status(400).json({ success: false, message: error.message || 'Bad request', error: error.message });
+    require('fs').appendFileSync('error_log.txt', new Date().toISOString() + ' UPDATE SUBCAT ERROR: ' + (error.stack || error) + '\n');
+    res.status(400).json({ success: false, message: error.message || 'SERVER_CATCH_FALLBACK2', error: error.message });
   }
 };
 
@@ -165,7 +195,6 @@ exports.deleteSubCategory = async (req, res) => {
       $or: [
         { subCategory: subCat._id },
         { legacySubCategory: subCat.name },
-        { subCategory: subCat.name },
       ],
       isDeleted: { $ne: true },
     });

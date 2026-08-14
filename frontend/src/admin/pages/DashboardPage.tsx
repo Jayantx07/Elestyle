@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Package, ShoppingCart, Users, DollarSign, TrendingUp, AlertCircle } from 'lucide-react';
 import { PageHeader } from '../components/shared/PageHeader';
 import { StatusBadge } from '../components/shared/StatusBadge';
-import { adminDashboardService, type DashboardStats } from '../services/dashboardService';
+import { adminDashboardService } from '../services/dashboardService';
 
 export default function DashboardPage() {
   const { data: stats, isLoading: loading, isError, error: queryError } = useQuery({

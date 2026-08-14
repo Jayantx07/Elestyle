@@ -13,6 +13,7 @@ import SearchPage from '@/pages/SearchPage';
 import AboutPage from '@/pages/AboutPage';
 import ContactPage from '@/pages/ContactPage';
 import CheckoutPage from '@/pages/CheckoutPage';
+import ShippingPage from '@/pages/ShippingPage';
 
 // Account Dashboard Imports
 import AccountLayout from '@/components/layout/AccountLayout';
@@ -154,6 +155,10 @@ export const router = createBrowserRouter([
       {
         path: 'contact',
         element: <ContactPage />,
+      },
+      {
+        path: 'shipping',
+        element: <ShippingPage />,
       },
       // Additional routes will be added here
     ],

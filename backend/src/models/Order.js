@@ -44,7 +44,7 @@ const orderSchema = new mongoose.Schema(
     paymentMethod: {
       type: String,
       required: true,
-      default: 'Credit Card', // default dummy method
+      default: 'Razorpay',
     },
     paymentStatus: {
       type: String,

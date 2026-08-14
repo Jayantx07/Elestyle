@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ArrowDown, ArrowUp, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -104,7 +104,7 @@ export default function LandingPage() {
       );
       return { previous };
     },
-    onError: (error, banner, context) => {
+    onError: (_error, _banner, context) => {
       if (context?.previous) {
         queryClient.setQueryData(landingBannerKeys.all, context.previous);
       }
@@ -131,7 +131,7 @@ export default function LandingPage() {
       );
       return { previous };
     },
-    onError: (error, deletedId, context) => {
+    onError: (_error, _deletedId, context) => {
       if (context?.previous) {
         queryClient.setQueryData(landingBannerKeys.all, context.previous);
       }
@@ -165,7 +165,7 @@ export default function LandingPage() {
       });
       return { previous };
     },
-    onError: (error, items, context) => {
+    onError: (_error, _items, context) => {
       if (context?.previous) {
         queryClient.setQueryData(landingBannerKeys.all, context.previous);
       }

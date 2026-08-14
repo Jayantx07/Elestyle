@@ -371,6 +371,7 @@ const ProfilePage: React.FC = () => {
               </button>
             </div>
             {error && <div className="p-3 bg-red-50 text-red-600 rounded-xl text-xs font-medium">{error}</div>}
+            {success && <div className="p-3 bg-green-50 text-green-600 rounded-xl text-xs font-medium">{success}</div>}
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">Full Name</label>
