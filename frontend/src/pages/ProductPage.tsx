@@ -189,6 +189,7 @@ const ProductPage: React.FC = () => {
                     description={p.description || ''}
                     imageSrc={imgUrl}
                     altText={p.name}
+                    product={p}
                   />
                 );
               })}

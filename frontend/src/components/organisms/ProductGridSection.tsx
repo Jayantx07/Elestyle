@@ -83,6 +83,7 @@ export const ProductGridSection: React.FC = () => {
                   description={product.description || ''}
                   imageSrc={imageSrc}
                   altText={product.name}
+                  product={product}
                 />
               );
             })}
