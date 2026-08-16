@@ -31,6 +31,7 @@ const MENU_ITEMS = [
   { name: 'Landing Page', icon: ImageIcon, path: '/admin/landing-page' },
   { name: 'Video Highlights', icon: Film, path: '/admin/video-highlights' },
   { name: 'Feature Highlights', icon: ImageIcon, path: '/admin/feature-highlights' },
+  { name: 'About Highlights', icon: ImageIcon, path: '/admin/about-feature-highlights' },
   { name: 'Settings', icon: Settings, path: '/admin/settings' },
 ];
 

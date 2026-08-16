@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { X, Loader2, PlayCircle, Film } from 'lucide-react';
-import type { AdminVideoHighlight, VideoHighlightFormData } from '../../services/videoHighlightService';
+import { X, Loader2, ImageIcon } from 'lucide-react';
+import type { AdminAboutFeatureHighlight, AboutFeatureHighlightFormData } from '../../services/aboutFeatureHighlightService';
 import type { AdminCategory } from '../../services/categoryService';
 
-interface VideoHighlightFormModalProps {
+interface AboutFeatureHighlightFormModalProps {
   isOpen: boolean;
   mode: 'create' | 'edit';
-  initialData: AdminVideoHighlight | null;
+  initialData: AdminAboutFeatureHighlight | null;
   categories: AdminCategory[];
   isSaving: boolean;
   uploadProgress: number;
   error: string | null;
-  onSubmit: (data: VideoHighlightFormData) => void;
+  onSubmit: (data: AboutFeatureHighlightFormData) => void;
   onClose: () => void;
 }
 
-export const VideoHighlightFormModal: React.FC<VideoHighlightFormModalProps> = ({
+export const AboutFeatureHighlightFormModal: React.FC<AboutFeatureHighlightFormModalProps> = ({
   isOpen,
   mode,
   initialData,
@@ -26,61 +26,60 @@ export const VideoHighlightFormModal: React.FC<VideoHighlightFormModalProps> = (
   onSubmit,
   onClose,
 }) => {
-  const [title, setTitle] = useState('');
+  const [altText, setAltText] = useState('');
   const [category, setCategory] = useState('');
   const [displayOrder, setDisplayOrder] = useState(1);
   const [isActive, setIsActive] = useState(true);
-  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       if (mode === 'edit' && initialData) {
-        setTitle(initialData.title || '');
-        const cat = initialData.category;
-        setCategory(cat ? (typeof cat === 'object' ? (cat as AdminCategory)._id : cat as string) : '');
+        setAltText(initialData.altText || '');
+        setCategory(typeof initialData.category === 'object' && initialData.category ? (initialData.category as AdminCategory)._id : (initialData.category as string || ''));
         setDisplayOrder(initialData.displayOrder);
         setIsActive(initialData.isActive);
-        setVideoFile(null);
-        setPreviewUrl(initialData.videoUrl || null);
+        setImageFile(null);
+        setPreviewUrl(initialData.imageSrc || null);
       } else {
-        setTitle('');
+        setAltText('');
         setCategory('');
         setDisplayOrder(1);
         setIsActive(true);
-        setVideoFile(null);
+        setImageFile(null);
         setPreviewUrl(null);
       }
     }
   }, [isOpen, mode, initialData]);
 
-  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 10 * 1024 * 1024) {
-      alert('Video file size exceeds the 10MB limit.');
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image file size exceeds the 5MB limit.');
       e.target.value = '';
       return;
     }
     
-    setVideoFile(file);
+    setImageFile(file);
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (mode === 'create' && !videoFile) {
-      alert('Please select a video file to upload.');
+    if (mode === 'create' && !imageFile) {
+      alert('Please select an image file to upload.');
       return;
     }
     onSubmit({
-      title,
+      altText,
       category,
       displayOrder,
       isActive,
-      videoFile: videoFile || undefined,
+      imageFile: imageFile || undefined,
     });
   };
 
@@ -91,7 +90,7 @@ export const VideoHighlightFormModal: React.FC<VideoHighlightFormModalProps> = (
       <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
           <h2 className="text-xl font-semibold text-gray-900">
-            {mode === 'create' ? 'Add Video Highlight' : 'Edit Video Highlight'}
+            {mode === 'create' ? 'Add About Highlight' : 'Edit About Highlight'}
           </h2>
           <button
             type="button"
@@ -110,10 +109,10 @@ export const VideoHighlightFormModal: React.FC<VideoHighlightFormModalProps> = (
             </div>
           )}
 
-          <form id="video-highlight-form" onSubmit={handleSubmit} className="space-y-6">
+          <form id="about-feature-highlight-form" onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">Category (Optional)</label>
+                <label className="mb-2 block text-sm font-medium text-gray-700">Category (Used for Badge)</label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
@@ -144,55 +143,52 @@ export const VideoHighlightFormModal: React.FC<VideoHighlightFormModalProps> = (
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">Title / Caption (Optional)</label>
+              <label className="mb-2 block text-sm font-medium text-gray-700">Alt Text (Accessibility)</label>
               <input
                 type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                value={altText}
+                onChange={(e) => setAltText(e.target.value)}
                 maxLength={120}
-                placeholder="e.g. Handcrafted with love"
+                placeholder="e.g. Handmade Earring with green stones"
                 className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 disabled={isSaving}
               />
-              <p className="mt-1 text-xs text-gray-500">Keep it short (3-4 words) for best appearance over the video.</p>
+              <p className="mt-1 text-xs text-gray-500">Important for SEO and screen readers.</p>
             </div>
 
             <div>
               <label className="mb-2 block text-sm font-medium text-gray-700">
-                Video File {mode === 'create' && <span className="text-red-500">*</span>}
+                Image File {mode === 'create' && <span className="text-red-500">*</span>}
               </label>
               
               <div className="mt-2 flex justify-center rounded-xl border-2 border-dashed border-gray-300 px-6 py-8 relative overflow-hidden group hover:bg-gray-50 transition-colors">
                 <div className="text-center">
                   {previewUrl ? (
-                    <div className="relative mx-auto h-48 w-28 overflow-hidden rounded-lg bg-black shadow-md">
-                      <video src={previewUrl} className="h-full w-full object-cover" muted loop playsInline />
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <PlayCircle className="text-white w-8 h-8" />
-                      </div>
+                    <div className="relative mx-auto h-48 w-36 overflow-hidden rounded-lg shadow-md bg-gray-100">
+                      <img src={previewUrl} className="h-full w-full object-cover" alt="Preview" />
                     </div>
                   ) : (
-                    <Film className="mx-auto h-12 w-12 text-gray-400" />
+                    <ImageIcon className="mx-auto h-12 w-12 text-gray-400" />
                   )}
                   
                   <div className="mt-4 flex text-sm leading-6 text-gray-600 justify-center">
                     <label
-                      htmlFor="video-upload"
+                      htmlFor="image-upload"
                       className="relative cursor-pointer rounded-md bg-white font-semibold text-primary focus-within:outline-none focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 hover:text-primary/80"
                     >
-                      <span>{previewUrl ? 'Change video' : 'Upload a video'}</span>
+                      <span>{previewUrl ? 'Change image' : 'Upload an image'}</span>
                       <input
-                        id="video-upload"
-                        name="video-upload"
+                        id="image-upload"
+                        name="image-upload"
                         type="file"
-                        accept="video/mp4,video/webm,video/quicktime"
+                        accept="image/jpeg,image/png,image/webp"
                         className="sr-only"
-                        onChange={handleVideoChange}
+                        onChange={handleImageChange}
                         disabled={isSaving}
                       />
                     </label>
                   </div>
-                  <p className="text-xs leading-5 text-gray-500 mt-1">MP4, WebM up to 10MB (max 30 sec)</p>
+                  <p className="text-xs leading-5 text-gray-500 mt-1">JPEG, PNG, WebP up to 5MB (Portrait 3:4 aspect ratio recommended)</p>
                 </div>
               </div>
             </div>
@@ -210,7 +206,7 @@ export const VideoHighlightFormModal: React.FC<VideoHighlightFormModalProps> = (
                 <label htmlFor="isActive" className="text-sm font-medium text-gray-900 cursor-pointer">
                   Active (Visible on Storefront)
                 </label>
-                <span className="text-xs text-gray-500">Inactive highlights are hidden from customers.</span>
+                <span className="text-xs text-gray-500">Inactive highlights are hidden from the carousel.</span>
               </div>
             </div>
           </form>
@@ -239,7 +235,7 @@ export const VideoHighlightFormModal: React.FC<VideoHighlightFormModalProps> = (
             </button>
             <button
               type="submit"
-              form="video-highlight-form"
+              form="about-feature-highlight-form"
               disabled={isSaving}
               className="inline-flex items-center rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-70"
             >

@@ -11,6 +11,7 @@ import {
   Truck
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { AboutFeatureCarousel } from '../components/organisms/AboutFeatureCarousel';
 
 const pageContent = {
   hero: {
@@ -234,6 +235,9 @@ const AboutPage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* ABOUT FEATURE CAROUSEL */}
+      <AboutFeatureCarousel />
 
       {/* FOOTER FEATURES */}
       <section className="border-t border-[#EAE2D6] bg-[#FCFAF8] py-12">

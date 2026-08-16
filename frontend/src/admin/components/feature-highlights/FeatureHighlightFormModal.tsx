@@ -37,7 +37,8 @@ export const FeatureHighlightFormModal: React.FC<FeatureHighlightFormModalProps>
     if (isOpen) {
       if (mode === 'edit' && initialData) {
         setAltText(initialData.altText || '');
-        setCategory(typeof initialData.category === 'object' && initialData.category ? initialData.category._id : (initialData.category || ''));
+        const cat = initialData.category;
+        setCategory(cat ? (typeof cat === 'object' ? (cat as AdminCategory)._id : cat as string) : '');
         setDisplayOrder(initialData.displayOrder);
         setIsActive(initialData.isActive);
         setImageFile(null);

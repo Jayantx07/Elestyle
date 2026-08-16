@@ -55,6 +55,7 @@ import AnalyticsPage from '@/admin/pages/AnalyticsPage';
 import LandingPage from '@/admin/pages/LandingPage';
 import VideoHighlightsPage from '@/admin/pages/VideoHighlightsPage';
 import FeatureHighlightsPage from '@/admin/pages/FeatureHighlightsPage';
+import AboutFeatureHighlightsPage from '@/admin/pages/AboutFeatureHighlightsPage';
 import SettingsPage from '@/admin/pages/SettingsPage';
 
 export const router = createBrowserRouter([
@@ -258,6 +259,10 @@ export const router = createBrowserRouter([
           {
             path: 'feature-highlights',
             element: <FeatureHighlightsPage />,
+          },
+          {
+            path: 'about-feature-highlights',
+            element: <AboutFeatureHighlightsPage />,
           },
           {
             path: 'settings',

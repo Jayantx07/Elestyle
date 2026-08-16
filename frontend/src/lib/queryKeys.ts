@@ -44,10 +44,19 @@ export const videoHighlightKeys = {
   detail: (id: string) => [...videoHighlightKeys.details(), id] as const,
 };
 
+
 export const featureHighlightKeys = {
   all: ['featureHighlights'] as const,
   lists: () => [...featureHighlightKeys.all, 'list'] as const,
   list: (filters: string) => [...featureHighlightKeys.lists(), { filters }] as const,
   details: () => [...featureHighlightKeys.all, 'detail'] as const,
   detail: (id: string) => [...featureHighlightKeys.details(), id] as const,
+};
+
+export const aboutFeatureHighlightKeys = {
+  all: ['aboutFeatureHighlights'] as const,
+  lists: () => [...aboutFeatureHighlightKeys.all, 'list'] as const,
+  list: (filters: string) => [...aboutFeatureHighlightKeys.lists(), { filters }] as const,
+  details: () => [...aboutFeatureHighlightKeys.all, 'detail'] as const,
+  detail: (id: string) => [...aboutFeatureHighlightKeys.details(), id] as const,
 };
