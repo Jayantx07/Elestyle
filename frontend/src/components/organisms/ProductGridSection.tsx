@@ -27,7 +27,7 @@ export const ProductGridSection: React.FC = () => {
     const cat = categories.find(c => c._id === activeCategoryId);
     if (cat) {
       setLoadingProducts(true);
-      publicProductService.getProductsByCategorySlug(cat.slug)
+      publicProductService.getProductsByCategorySlug(cat.slug, 'featured=true')
         .then((res) => {
           setProducts(res.data || []);
           setLoadingProducts(false);

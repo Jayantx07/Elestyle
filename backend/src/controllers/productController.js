@@ -23,7 +23,12 @@ async function buildProductFilterQuery(query, params) {
   }
 
   if (params.subcategory && params.subcategory !== 'all' && params.subcategory !== '') {
-    const subValues = params.subcategory.split(',').map((s) => s.trim());
+    let subValues = [];
+    if (Array.isArray(params.subcategory)) {
+      subValues = params.subcategory;
+    } else {
+      subValues = params.subcategory.split(',').map((s) => s.trim());
+    }
     const objectIds = [];
     const strings = [];
 
@@ -272,26 +277,55 @@ exports.getProductFacets = async (req, res) => {
         }
       }
 
-      const [subCatCounts, colorCounts, materialCounts, availabilityCounts, ratingCounts, priceStats] = await Promise.all([
+      const facetMatchStage = { ...matchStage };
+      const subcategoryQuery = req.query.subcategory;
+      if (subcategoryQuery && subcategoryQuery !== 'all' && subcategoryQuery !== '') {
+        let subValues = [];
+        if (Array.isArray(subcategoryQuery)) {
+          subValues = subcategoryQuery;
+        } else {
+          subValues = subcategoryQuery.split(',').map((s) => s.trim());
+        }
+        
+        const objectIds = [];
+        const strings = [];
+        for (const val of subValues) {
+          strings.push(val);
+          if (mongoose.Types.ObjectId.isValid(val)) {
+            objectIds.push(new mongoose.Types.ObjectId(val));
+          } else {
+            const subDoc = await SubCategory.findOne({
+              $or: [{ slug: val }, { slugHistory: { $in: [val] } }, { name: { $regex: new RegExp(`^${val}$`, 'i') } }],
+            });
+            if (subDoc) {
+              objectIds.push(subDoc._id);
+              strings.push(subDoc.name);
+              strings.push(subDoc.slug);
+            }
+          }
+        }
+        facetMatchStage.$or = [
+          { subCategory: { $in: objectIds } },
+          { legacySubCategory: { $in: strings } }
+        ];
+      }
+
+      const [subCatCounts, productsForColors, materialCounts, availabilityCounts, ratingCounts, priceStats] = await Promise.all([
         Product.aggregate([
           { $match: matchStage },
           { $group: { _id: { id: '$subCategory', legacy: '$legacySubCategory' }, count: { $sum: 1 } } },
         ]),
+        Product.find(facetMatchStage).select('colors variants attributes'),
         Product.aggregate([
-          { $match: matchStage },
-          { $unwind: '$colors' },
-          { $group: { _id: { name: '$colors.name', hex: '$colors.hex' }, count: { $sum: 1 } } },
-        ]),
-        Product.aggregate([
-          { $match: { ...matchStage, material: { $nin: [null, ''] } } },
+          { $match: { ...facetMatchStage, material: { $nin: [null, ''] } } },
           { $group: { _id: '$material', count: { $sum: 1 } } },
         ]),
         Product.aggregate([
-          { $match: matchStage },
+          { $match: facetMatchStage },
           { $group: { _id: { $ifNull: ['$availability', 'In Stock'] }, count: { $sum: 1 } } },
         ]),
         Product.aggregate([
-          { $match: matchStage },
+          { $match: facetMatchStage },
           {
             $group: {
               _id: null,
@@ -302,7 +336,7 @@ exports.getProductFacets = async (req, res) => {
           },
         ]),
         Product.aggregate([
-          { $match: matchStage },
+          { $match: facetMatchStage },
           { $group: { _id: null, minPrice: { $min: '$price' }, maxPrice: { $max: '$price' } } },
         ]),
       ]);
@@ -321,14 +355,45 @@ exports.getProductFacets = async (req, res) => {
       });
 
       const colorMap = {};
-      colorCounts.forEach((c) => {
-        if (!c._id || !c._id.name || typeof c._id.name !== 'string' || c._id.name.trim() === '' || c._id.name === 'null') return;
-        const name = c._id.name.trim();
-        if (colorMap[name]) {
-          colorMap[name].count += c.count;
-        } else {
-          colorMap[name] = { name, label: name, value: name, hex: c._id.hex || '#CCCCCC', count: c.count };
+      productsForColors.forEach((product) => {
+        const productColors = new Map();
+        
+        // 1. Base color (from attributes)
+        const attrColor = product.attributes?.find(a => a.key && (a.key.toLowerCase() === 'color' || a.key.toLowerCase() === 'basecolor'));
+        const attrColorHex = product.attributes?.find(a => a.key && a.key.toLowerCase() === 'basecolorhex')?.value;
+        if (attrColor || attrColorHex) {
+          const baseColorName = attrColor?.value || 'Base';
+          const finalHex = attrColorHex || '#e5e7eb';
+          productColors.set(baseColorName.toLowerCase(), { name: baseColorName, hex: finalHex });
         }
+
+        // 2. Variant colors
+        if (product.variants && Array.isArray(product.variants)) {
+          product.variants.forEach(v => {
+            if (v.isActive !== false && v.colorName) {
+              productColors.set(v.colorName.toLowerCase(), { name: v.colorName, hex: v.colorHex || '#000' });
+            }
+          });
+        }
+
+        // 3. Fallback to product.colors
+        if (product.colors && Array.isArray(product.colors)) {
+          product.colors.forEach(c => {
+            if (c.name && !productColors.has(c.name.toLowerCase())) {
+              productColors.set(c.name.toLowerCase(), { name: c.name, hex: c.hex });
+            }
+          });
+        }
+
+        productColors.forEach((color, key) => {
+          const name = color.name.trim();
+          if (!name) return;
+          if (colorMap[name]) {
+            colorMap[name].count += 1;
+          } else {
+            colorMap[name] = { name, label: name, value: name, hex: color.hex || '#CCCCCC', count: 1 };
+          }
+        });
       });
       const colorFacets = Object.values(colorMap);
 
